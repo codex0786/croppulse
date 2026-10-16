@@ -12,13 +12,12 @@ Each run is also registered as an EvaluationRun (is_synthetic flagged) in the ap
 
 from __future__ import annotations
 
+import copy
 import json
 from datetime import UTC, date, datetime
 
 import numpy as np
 import pandas as pd
-
-import copy
 
 from croppulse.config import REPO_ROOT, config_version, get_settings, science_config
 from croppulse.db import get_sessionmaker
@@ -196,18 +195,24 @@ State counts per unit:
 
 ## States by as-of date
 
-""" + md_table(by_date.reset_index()) + """
+"""
+        + md_table(by_date.reset_index())
+        + """
 
 ## Label-free sensitivity: reference pooling
 
 Pooling ±1 adjacent 16-day composite enlarges the reference sample under monsoon cloud at the cost of mixing
 phenological stages. No outcome labels were used; this changes data sufficiency, not measured accuracy.
 
-""" + md_table(sens) + """
+"""
+        + md_table(sens)
+        + """
 
 ## Observed behaviour worth reviewing
 
-- """ + str(len(weather_only)) + """ assessment(s) reached `watch` from weather indicators while NDVI was well **above** the reference
+- """
+        + str(len(weather_only))
+        + """ assessment(s) reached `watch` from weather indicators while NDVI was well **above** the reference
   (robust z > 1.5). The rules let a rainfall deficit raise `watch` regardless of strongly positive vegetation evidence;
   agronomists should decide whether that is desirable (it may be appropriate early in a dry spell, or a false alarm).
 - Rainfall-deficit indicators fired at all four grid cells in 2018. Whether this matches documented events must be
