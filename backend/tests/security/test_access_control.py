@@ -164,3 +164,13 @@ def test_health_endpoints_do_not_leak_internals(client):
     r = client.get("/ready")
     assert r.status_code == 200 and "sqlite" not in r.text and "password" not in r.text
     assert r.headers["X-Content-Type-Options"] == "nosniff"
+
+
+def test_server_errors_carry_cors_headers(client, actors, monkeypatch):
+    from croppulse.api.routers import fields as fields_router
+
+    _, h = actors.user(Role.farmer, "cors@pilot.croppulse.in", actors.org)
+    monkeypatch.setattr(fields_router, "_calendar", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    r = client.get("/api/v1/fields/reference-data", headers={**h, "Origin": "http://localhost:3000"})
+    assert r.status_code == 500 and r.headers.get("access-control-allow-origin") == "http://localhost:3000"
+    assert "boom" not in r.text

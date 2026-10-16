@@ -32,7 +32,7 @@
 
 | Command | Ran | Result | Notes |
 |---|---|---|---|
-| `cd backend && pytest` (offline) | yes | **97 passed**, 3 live deselected | unit, integration, scientific, security, e2e (TestClient) with synthetic fixtures |
+| `cd backend && pytest` (offline) | yes | **99 passed**, 3 live deselected | unit, integration, scientific, security, e2e (TestClient) with synthetic fixtures |
 | `pytest -m live` | yes | **3 passed** | real NASA POWER, MOD13Q1, MCD12Q1 responses |
 | `alembic upgrade head && alembic check` on SQLite | yes | pass | |
 | same on PostgreSQL 18.3 | yes | pass | temporary DB `croppulse_migration_check` |
@@ -46,6 +46,10 @@
 | Browser verification of running UI | **attempted, not completed** | — | desktop preview processes stalled before start (likely a pending macOS permission prompt); UI verified only by build/type/lint/i18n tests |
 | `scripts/seed_dev.py --synthetic-demo` | yes | pass | 6 dev accounts (credentials in gitignored `data/dev_credentials.txt`) |
 | `make evaluate` | yes | pass | see section E |
+
+Bugs found during live use (fixed, with regression tests): ingestion held an open SQLite write transaction during
+slow NASA downloads, so concurrent field registration failed with "database is locked"; 500 responses lacked CORS
+headers, so the browser showed "Failed to fetch" instead of the error.
 
 Bugs found and fixed by tests: zero-percentile treated as "not low" (falsy 0 in `percentile or 100`), division by zero
 on an empty reference sample, missing org commit in fixtures; two of my own hand-calculated test expectations were wrong

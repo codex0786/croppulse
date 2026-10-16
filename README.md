@@ -38,7 +38,7 @@ is filled in with invented data.
 
 | Command | What it does |
 |---|---|
-| `make test` | 97 backend tests (unit, integration, scientific/leakage, security, e2e; offline synthetic fixtures) + web i18n tests |
+| `make test` | 99 backend tests (unit, integration, scientific/leakage, security, e2e; offline synthetic fixtures) + web i18n tests |
 | `make test-live` | Tests against the real NASA/ORNL services |
 | `make lint` / `make typecheck` | ruff + next lint / mypy + tsc |
 | `make migrate` | Alembic migrations (SQLite or PostgreSQL) |

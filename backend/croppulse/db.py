@@ -51,7 +51,8 @@ class Base(DeclarativeBase):
 def make_engine(url: str) -> Engine:
     kwargs: dict[str, Any] = {"future": True, "pool_pre_ping": True}
     if url.startswith("sqlite"):
-        kwargs["connect_args"] = {"check_same_thread": False}
+        # Wait up to 30 s for a competing writer instead of failing immediately with "database is locked".
+        kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
     engine = create_engine(url, **kwargs)
     if url.startswith("sqlite"):
 
@@ -60,6 +61,7 @@ def make_engine(url: str) -> Engine:
             cur = dbapi_conn.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
             cur.execute("PRAGMA journal_mode=WAL")
+            cur.execute("PRAGMA busy_timeout=30000")
             cur.close()
 
     return engine

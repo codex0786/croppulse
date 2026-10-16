@@ -47,7 +47,9 @@ def _start(session: Session, source_id: str, job_type: str, target: str | None) 
         config_version=config_version(get_settings().science_config_path),
     )
     session.add(job)
-    session.flush()
+    # Commit now: the job becomes visible as "running" and no write transaction stays open
+    # during slow network downloads (SQLite allows only one writer at a time).
+    session.commit()
     return job
 
 

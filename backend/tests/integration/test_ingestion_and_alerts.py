@@ -167,3 +167,34 @@ def test_escalation_opens_case_only_with_consent(session, actors, world):
     run_assessment(session, f)
     assert session.scalar(select(func.count()).select_from(ExpertCase)) == 0
     assert session.scalar(select(func.count()).select_from(RiskAssessment)) == 1
+
+
+def test_no_write_lock_held_during_network_download(session, actors, world):
+    """Regression: ingestion once held an open SQLite write transaction during slow downloads,
+    so field registration elsewhere failed with 'database is locked'."""
+    import sqlite3
+
+    from croppulse.config import get_settings
+
+    farmer, _ = actors.user(Role.farmer, "lock@pilot.croppulse.in", actors.org)
+    f = make_field(session, farmer)
+    db_path = get_settings().database_url.removeprefix("sqlite:///")
+    outcomes = []
+    original = world.ornl
+
+    def ornl_with_concurrent_write(path, q):
+        if not outcomes:
+            con = sqlite3.connect(db_path, timeout=1)
+            try:
+                con.execute("INSERT INTO organizations (id, name, kind, created_at) VALUES ('concurrent0000000000000000000000', 'x', 'fpo', '2026-01-01')")
+                con.commit()
+                outcomes.append("ok")
+            except sqlite3.OperationalError as exc:
+                outcomes.append(str(exc))
+            finally:
+                con.close()
+        return original(path, q)
+
+    world.ornl = ornl_with_concurrent_write
+    ingest_field_vegetation(session, f)
+    assert outcomes == ["ok"]
