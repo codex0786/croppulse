@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, date, datetime
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -50,7 +49,16 @@ def md_table(df: pd.DataFrame) -> str:
 def register(regime: str, synthetic: bool, metrics: dict, report: str, notes: str) -> None:
     s = get_sessionmaker()()
     try:
-        s.add(EvaluationRun(model_name="screening-rules@0.1.0", regime=regime, is_synthetic=synthetic, metrics=json.loads(json.dumps(metrics, default=str)), report_path=report, notes=notes))
+        s.add(
+            EvaluationRun(
+                model_name="screening-rules@0.1.0",
+                regime=regime,
+                is_synthetic=synthetic,
+                metrics=json.loads(json.dumps(metrics, default=str)),
+                report_path=report,
+                notes=notes,
+            )
+        )
         s.commit()
     except Exception as exc:  # DB not migrated: the report files are still written
         print(f"(evaluation run not registered in DB: {exc.__class__.__name__})")
@@ -100,7 +108,7 @@ Column notes: *accepted_share* = composites with ≥ {int(100 * 0.5)} % of selec
 
 - Monsoon cloud is the dominant data gap: usable-composite share in June–September is lower than in the dry season
   (table above). Kharif-season screening therefore often has to abstain or rely on weather indicators.
-- MODIS latency: the latest composite available ends {pp['latest_period_end'].max()}; with typical 2–4 week latency the vegetation
+- MODIS latency: the latest composite available ends {pp["latest_period_end"].max()}; with typical 2–4 week latency the vegetation
   evidence is always weeks old. CropPulse marks it *stale* after {48} days.
 - NASA POWER has essentially complete daily coverage since 1991 apart from the most recent days, which arrive with a lag.
 - Spatial support: each footprint selects only a handful of 250 m pixels; ORNL subsets were observed to contain repeated values
@@ -146,7 +154,7 @@ Stored predictions: `reports/artifacts/backtest_predictions.csv` ({len(bt)} rows
 ## Design
 
 - Units: research sample points (see DATA_COVERAGE_REPORT.md); crop unknown (context "unknown kharif crop").
-- As-of dates: 15 Aug, 15 Sep, 15 Oct of each year in {sorted(set(pd.to_datetime(bt['as_of']).dt.year))}.
+- As-of dates: 15 Aug, 15 Sep, 15 Oct of each year in {sorted(set(pd.to_datetime(bt["as_of"]).dt.year))}.
 - Availability simulation: a composite is usable from period end + 21 days; weather from day + 3.
   Reference statistics use only years strictly before the target year (leakage tests: `tests/scientific`).
 - Method: `screening-rules@0.1.0` with the unvalidated thresholds in `config/science.yaml`.
@@ -161,7 +169,9 @@ State counts per unit:
 
 | Summary | Value |
 |---|---|
-""" + "\n".join(f"| {k} | {v} |" for k, v in metrics.items()) + """
+"""
+        + "\n".join(f"| {k} | {v} |" for k, v in metrics.items())
+        + """
 
 ## Interpretation and limits
 
@@ -176,7 +186,13 @@ State counts per unit:
 - Next step: collect verified outcomes through the expert workflow (docs/PILOT_PROTOCOL.md) and re-run with labels.
 """
     )
-    register("descriptive_backtest_unlabelled", False, metrics, "reports/BASELINE_BACKTEST.md", "Real MODIS/POWER data at public sample points; no labels, descriptive only.")
+    register(
+        "descriptive_backtest_unlabelled",
+        False,
+        metrics,
+        "reports/BASELINE_BACKTEST.md",
+        "Real MODIS/POWER data at public sample points; no labels, descriptive only.",
+    )
     register("data_coverage", False, {"points": int(len(pp))}, "reports/DATA_COVERAGE_REPORT.md", "Real data coverage and quality.")
     print("real-data reports written")
     return True
@@ -192,7 +208,9 @@ def synthetic_mechanics() -> None:
                 stress = rng.random() < 0.15
                 veg = rng.normal(-1.8 if stress else 0.0, 1.0)
                 rain = rng.normal(-1.0 if stress else 0.0, 1.0)
-                rows.append({"district": district, "year": year, "unit": f"{district}-{unit}", "label": int(stress), "veg_z": veg, "rain_z": rain, "is_synthetic": True})
+                rows.append(
+                    {"district": district, "year": year, "unit": f"{district}-{unit}", "label": int(stress), "veg_z": veg, "rain_z": rain, "is_synthetic": True}
+                )
     df = pd.DataFrame(rows)
     df["t"] = pd.to_datetime(df["year"].astype(str) + "-09-15")
 
@@ -217,18 +235,33 @@ def synthetic_mechanics() -> None:
     train, test = df.iloc[sp.train_index], df.iloc[sp.test_index].copy()
     base_rate = train["label"].mean()
     ablation = {}
-    for name, cols in {"historical_base_rate": [], "vegetation_only": ["veg_z"], "weather_only": ["rain_z"], "vegetation_plus_weather": ["veg_z", "rain_z"]}.items():
+    for name, cols in {
+        "historical_base_rate": [],
+        "vegetation_only": ["veg_z"],
+        "weather_only": ["rain_z"],
+        "vegetation_plus_weather": ["veg_z", "rain_z"],
+    }.items():
         prob = np.full(len(test), base_rate) if not cols else fit_predict(train, test, cols)
         test[f"p_{name}"] = prob
-        ablation[name] = {"pr_auc": round(pr_auc(test["label"], prob) or float("nan"), 3), "brier": round(brier(test["label"], prob), 4), "log_loss": round(log_loss(test["label"], prob), 4)}
+        ablation[name] = {
+            "pr_auc": round(pr_auc(test["label"], prob) or float("nan"), 3),
+            "brier": round(brier(test["label"], prob), 4),
+            "log_loss": round(log_loss(test["label"], prob), 4),
+        }
     test["flag"] = (test["p_vegetation_plus_weather"] >= 0.5).astype(int)
     test["score"] = test["p_vegetation_plus_weather"]
     pred_path = ART / "SYNTHETIC_mechanics_predictions.csv"
     test.to_csv(pred_path, index=False)
     recomputed = metrics_from_table(pd.read_csv(pred_path), block_col="district")
     rel = reliability_table(test["label"], test["p_vegetation_plus_weather"], bins=5)
-    metrics = {"ablation": ablation, "threshold_0.5": precision_recall(test["label"], test["flag"]), "recomputed_from_table": recomputed, "reliability": rel,
-               "leakage_temporal_ok": leak_t.ok, "leakage_geographic_ok": leak_g.ok}
+    metrics = {
+        "ablation": ablation,
+        "threshold_0.5": precision_recall(test["label"], test["flag"]),
+        "recomputed_from_table": recomputed,
+        "reliability": rel,
+        "leakage_temporal_ok": leak_t.ok,
+        "leakage_geographic_ok": leak_g.ok,
+    }
     (REPORTS / "SYNTHETIC_EVALUATION_MECHANICS.md").write_text(
         f"""# SYNTHETIC evaluation mechanics check — NOT A SCIENTIFIC RESULT
 
@@ -242,7 +275,7 @@ block bootstrap, recomputation from a stored predictions table) runs correctly. 
 
 ## Ablation (synthetic)
 
-{md_table(pd.DataFrame(ablation).T.reset_index().rename(columns={'index': 'model'}))}
+{md_table(pd.DataFrame(ablation).T.reset_index().rename(columns={"index": "model"}))}
 
 ## Recomputed from stored predictions (`reports/artifacts/SYNTHETIC_mechanics_predictions.csv`)
 

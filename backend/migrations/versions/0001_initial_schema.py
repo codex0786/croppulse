@@ -5,10 +5,10 @@ Revises:
 Create Date: 2026-10-15 20:31:47.933525
 """
 
-from alembic import op
 import sqlalchemy as sa
-import croppulse.db
+from alembic import op
 
+import croppulse.db
 
 revision = "0001"
 down_revision = None

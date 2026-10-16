@@ -14,8 +14,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -e "backend[dev]"
-      - run: ruff check backend/croppulse backend/tests scripts
-      - run: mypy backend/croppulse
+      - run: ruff check --config backend/pyproject.toml backend/croppulse backend/tests scripts
+      - run: cd backend && mypy croppulse
       - run: cd backend && pytest
       - name: migrations on PostgreSQL
         env: { CROPPULSE_DATABASE_URL: "postgresql+psycopg://postgres:ci@localhost:5432/croppulse" }

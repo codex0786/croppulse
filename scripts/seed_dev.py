@@ -20,6 +20,8 @@ import secrets
 import stat
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from croppulse.config import config_version, get_settings
 from croppulse.db import get_sessionmaker, utcnow
 from croppulse.enums import ConsentPurpose, Role
@@ -30,14 +32,11 @@ from croppulse.models import CropSeason, Field, ModelVersion, Organization, User
 from croppulse.risk.engine import MODEL_NAME, MODEL_VERSION
 from croppulse.risk.service import open_report_case, run_assessment
 from croppulse.security import hash_password
-from sqlalchemy import select
 
 DOMAIN = "demo.croppulse.in"
 
 
-def _user(
-    s, creds, role: Role, local: str, org: Organization | None, name: str
-) -> User:
+def _user(s, creds, role: Role, local: str, org: Organization | None, name: str) -> User:
     email = f"{local}@{DOMAIN}"
     u = s.scalars(select(User).where(User.email == email)).first()
     if u is None:
@@ -56,9 +55,7 @@ def _user(
     return u
 
 
-def _field(
-    s, owner: User, name: str, geom: dict, district: str, synthetic: bool
-) -> Field:
+def _field(s, owner: User, name: str, geom: dict, district: str, synthetic: bool) -> Field:
     g = validate_field_geometry(geom)
     f = Field(
         owner_id=owner.id,
@@ -103,9 +100,7 @@ def main() -> None:
         raise SystemExit("Refusing to seed a production database.")
     s = get_sessionmaker()()
     creds: list[str] = []
-    org = s.scalars(
-        select(Organization).where(Organization.name == "Demo FPO (development only)")
-    ).first()
+    org = s.scalars(select(Organization).where(Organization.name == "Demo FPO (development only)")).first()
     if org is None:
         org = Organization(
             name="Demo FPO (development only)",
@@ -127,11 +122,7 @@ def main() -> None:
         ConsentPurpose.aggregated_research,
     ):
         record_consent(s, farmer.id, p, True)
-    if not s.scalars(
-        select(ModelVersion).where(
-            ModelVersion.name == MODEL_NAME, ModelVersion.version == MODEL_VERSION
-        )
-    ).first():
+    if not s.scalars(select(ModelVersion).where(ModelVersion.name == MODEL_NAME, ModelVersion.version == MODEL_VERSION)).first():
         s.add(
             ModelVersion(
                 name=MODEL_NAME,
@@ -209,26 +200,18 @@ def main() -> None:
             "Jalna",
             False,
         )
-        jobs = ingest_field(
-            s, f, start_year=2002
-        )  # same chunking as the research fetch → cache hits
+        jobs = ingest_field(s, f, start_year=2002)  # same chunking as the research fetch → cache hits
         run_assessment(s, f)
-        print(
-            "real demo ingestion:", ", ".join(f"{j.source_id}={j.status}" for j in jobs)
-        )
+        print("real demo ingestion:", ", ".join(f"{j.source_id}={j.status}" for j in jobs))
 
     if creds:
         path = settings.data_dir / "dev_credentials.txt"
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as fh:
-            fh.write(
-                "# CropPulse LOCAL DEVELOPMENT accounts — do not reuse these passwords anywhere\n"
-            )
+            fh.write("# CropPulse LOCAL DEVELOPMENT accounts — do not reuse these passwords anywhere\n")
             fh.write("\n".join(creds) + "\n")
         os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
-        print(
-            f"Created {len(creds)} development account(s); credentials written to {path}"
-        )
+        print(f"Created {len(creds)} development account(s); credentials written to {path}")
     else:
         print("Development accounts already exist; see data/dev_credentials.txt")
 

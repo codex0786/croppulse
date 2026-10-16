@@ -34,11 +34,11 @@ test-live:        ## tests that call the real NASA/ORNL services
 	cd $(BACKEND) && ../$(PY) -m pytest -m live
 
 lint:
-	.venv/bin/ruff check $(BACKEND)/croppulse $(BACKEND)/tests scripts
+	.venv/bin/ruff check --config $(BACKEND)/pyproject.toml $(BACKEND)/croppulse $(BACKEND)/tests scripts
 	cd web && npx next lint
 
 typecheck:
-	.venv/bin/mypy $(BACKEND)/croppulse
+	cd $(BACKEND) && ../.venv/bin/mypy croppulse
 	cd web && npx tsc --noEmit
 
 ingest:           ## refresh data + assessments for every registered field (live sources)

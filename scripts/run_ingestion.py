@@ -7,13 +7,14 @@ source job records its own status; a failed source leaves previous data untouche
 import argparse
 import logging
 
+from sqlalchemy import select
+
 from croppulse.alerting.engine import deliver_pending
 from croppulse.db import get_sessionmaker
 from croppulse.ingestion.jobs import ingest_field
 from croppulse.logging_setup import configure_logging, log
 from croppulse.models import Field
 from croppulse.risk.service import run_assessment
-from sqlalchemy import select
 
 logger = logging.getLogger("croppulse.scheduler")
 
@@ -25,11 +26,7 @@ if __name__ == "__main__":
     configure_logging("INFO")
     s = get_sessionmaker()()
     if not args.deliver_only:
-        fields = s.scalars(
-            select(Field).where(
-                Field.deleted_at.is_(None), Field.is_synthetic.is_(False)
-            )
-        ).all()
+        fields = s.scalars(select(Field).where(Field.deleted_at.is_(None), Field.is_synthetic.is_(False))).all()
         for f in fields:
             if not args.assess_only:
                 jobs = ingest_field(s, f)
