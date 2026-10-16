@@ -1,0 +1,24 @@
+# Alert rules. Thresholds are UNVALIDATED; see docs/VALIDATION_PROTOCOL.md §Alert validation.
+version: "alert-rules-0.1"
+rules:
+  - id: field_watch
+    description: "Unusual vegetation or weather pattern for a registered field"
+    min_state: watch
+    allowed_sufficiency: [sufficient, partial]
+    require_current_source: true      # at least one current (non-stale) source drove the state
+    audience: owner
+    cooldown_days: 14                 # same rule, same field, same severity: no re-notification
+    expiry_days: 16
+    title_key: alert_watch_title
+    message_key: alert_watch_message
+  - id: field_elevated
+    description: "Persistent low vegetation corroborated by weather; expert review required"
+    min_state: elevated_risk
+    allowed_sufficiency: [sufficient, partial]
+    require_current_source: true
+    audience: owner
+    cooldown_days: 14
+    expiry_days: 16
+    requires_expert: true
+    title_key: alert_elevated_title
+    message_key: alert_elevated_message

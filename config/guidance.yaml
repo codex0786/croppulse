@@ -1,0 +1,96 @@
+# Guidance library. Stored separately from model outputs.
+#
+# category:
+#   process   — non-agronomic next steps (check the field, contact an expert, how to read the data).
+#               Approved under the CropPulse safety policy (docs/SECURITY_AND_PRIVACY.md §Guidance);
+#               they contain no treatment, input or dosage advice.
+#   agronomic — crop-management advice. MUST cite an official source and be approved by a named
+#               agronomist. NONE are approved in this build, so no agronomic advice is shown.
+#
+# translation_status per language: approved | unreviewed. Farmers only see approved
+# translations of guidance; otherwise English is shown with a "translation pending review" note.
+
+version: "guidance-0.1"
+items:
+  - id: next_step_insufficient
+    category: process
+    applies_to_states: [insufficient_evidence]
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: "Does not assess the crop."
+    text:
+      en: {status: approved, body: "There is not enough recent, reliable data to assess this field. Your own observations matter most: if you see a problem, report it and ask an expert."}
+      hi: {status: unreviewed, body: "इस खेत का आकलन करने के लिए पर्याप्त हाल का और भरोसेमंद डेटा नहीं है। आपकी अपनी जाँच सबसे महत्वपूर्ण है: कोई समस्या दिखे तो रिपोर्ट करें और विशेषज्ञ से पूछें।"}
+      mr: {status: unreviewed, body: "या शेताचे मूल्यांकन करण्यासाठी पुरेसा अलीकडील आणि विश्वासार्ह डेटा नाही. तुमचे स्वतःचे निरीक्षण सर्वात महत्त्वाचे आहे: काही समस्या दिसल्यास ती नोंदवा आणि तज्ज्ञांना विचारा."}
+
+  - id: next_step_normal
+    category: process
+    applies_to_states: [normal_for_reference_period]
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: "Satellite data cannot see pests, disease or problems smaller than about 5 hectares."
+    text:
+      en: {status: approved, body: "Satellite greenness is within the usual range for this time of year. This does not rule out problems the satellite cannot see — keep checking your field and report anything unusual."}
+      hi: {status: unreviewed, body: "उपग्रह से दिखने वाली हरियाली साल के इस समय की सामान्य सीमा में है। इससे उन समस्याओं की संभावना खत्म नहीं होती जो उपग्रह नहीं देख सकता — खेत की जाँच करते रहें और कुछ असामान्य दिखे तो रिपोर्ट करें।"}
+      mr: {status: unreviewed, body: "उपग्रहावरून दिसणारी हिरवळ वर्षाच्या या काळातील नेहमीच्या मर्यादेत आहे. उपग्रहाला न दिसणाऱ्या समस्या नाहीत असे यावरून म्हणता येत नाही — शेत तपासत राहा आणि काही वेगळे दिसल्यास नोंदवा."}
+
+  - id: next_step_watch
+    category: process
+    applies_to_states: [watch]
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: "An unusual pattern does not establish its cause."
+    text:
+      en: {status: approved, body: "CropPulse has detected an unusual pattern, but this does not establish its cause. Check the field for visible symptoms and review the weather context. Report what you see; an agricultural expert may be needed before deciding on any treatment."}
+      hi: {status: unreviewed, body: "CropPulse ने एक असामान्य पैटर्न देखा है, लेकिन इससे इसका कारण तय नहीं होता। खेत में दिखने वाले लक्षण जाँचें और मौसम की स्थिति देखें। जो दिखे उसकी रिपोर्ट करें; किसी भी उपचार से पहले कृषि विशेषज्ञ की ज़रूरत हो सकती है।"}
+      mr: {status: unreviewed, body: "CropPulse ला एक असामान्य नमुना दिसला आहे, पण त्यावरून त्याचे कारण ठरत नाही. शेतात दिसणारी लक्षणे तपासा आणि हवामानाची स्थिती पाहा. जे दिसेल ते नोंदवा; कोणताही उपचार ठरवण्यापूर्वी कृषी तज्ज्ञांची गरज भासू शकते."}
+
+  - id: next_step_elevated
+    category: process
+    applies_to_states: [elevated_risk, expert_review_recommended]
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: "Screening indicator only; not validated for crop-loss prediction."
+    text:
+      en: {status: approved, body: "CropPulse has detected an unusual vegetation pattern together with unusual weather. This does not establish its cause or mean the crop is lost. Please inspect the field soon and request an expert review before deciding on treatment, irrigation or inputs."}
+      hi: {status: unreviewed, body: "CropPulse ने असामान्य मौसम के साथ वनस्पति का असामान्य पैटर्न देखा है। इससे इसका कारण तय नहीं होता और न ही इसका मतलब है कि फसल नष्ट हो गई है। कृपया जल्द खेत का निरीक्षण करें और उपचार, सिंचाई या किसी इनपुट का निर्णय लेने से पहले विशेषज्ञ समीक्षा का अनुरोध करें।"}
+      mr: {status: unreviewed, body: "CropPulse ला असामान्य हवामानासोबत वनस्पतीचा असामान्य नमुना दिसला आहे. यावरून त्याचे कारण ठरत नाही किंवा पीक गेले असा अर्थ होत नाही. कृपया लवकर शेताची पाहणी करा आणि उपचार, सिंचन किंवा निविष्ठांचा निर्णय घेण्यापूर्वी तज्ज्ञ पुनरावलोकनाची विनंती करा."}
+
+  - id: next_step_verified
+    category: process
+    applies_to_states: [verified_stress, resolved]
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: "Follow the recommendation recorded by the expert who reviewed your case."
+    text:
+      en: {status: approved, body: "An expert has reviewed this field. Follow the recommendation recorded in your case."}
+      hi: {status: unreviewed, body: "एक विशेषज्ञ ने इस खेत की समीक्षा की है। अपने केस में दर्ज सिफ़ारिश का पालन करें।"}
+      mr: {status: unreviewed, body: "एका तज्ज्ञाने या शेताचे पुनरावलोकन केले आहे. तुमच्या केसमध्ये नोंदवलेल्या शिफारसीचे पालन करा."}
+
+  - id: symptom_not_diagnosis
+    category: process
+    applies_to_states: []
+    approval_status: approved
+    source_org: "CropPulse safety policy"
+    source_ref: "docs/SECURITY_AND_PRIVACY.md#guidance"
+    limitations: ""
+    text:
+      en: {status: approved, body: "Symptoms such as wilting or yellowing can have many causes — water shortage, waterlogging, pests, disease, nutrients or heat. A satellite image cannot tell them apart."}
+      hi: {status: unreviewed, body: "मुरझाना या पीलापन जैसे लक्षणों के कई कारण हो सकते हैं — पानी की कमी, जलभराव, कीट, रोग, पोषक तत्व या गर्मी। उपग्रह चित्र इनमें अंतर नहीं कर सकता।"}
+      mr: {status: unreviewed, body: "कोमेजणे किंवा पिवळेपणा यांसारख्या लक्षणांची अनेक कारणे असू शकतात — पाण्याची कमतरता, पाणी साचणे, कीड, रोग, अन्नद्रव्ये किंवा उष्णता. उपग्रह प्रतिमा त्यांच्यात फरक करू शकत नाही."}
+
+  # Example of an agronomic item: present as a template, never shown until approved.
+  - id: agronomic_template_example
+    category: agronomic
+    applies_to_states: []
+    approval_status: draft_requires_expert
+    source_org: null
+    source_ref: null
+    limitations: "Template only — requires an official source and agronomist approval."
+    text:
+      en: {status: unreviewed, body: "(empty template)"}

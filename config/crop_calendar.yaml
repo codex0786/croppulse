@@ -1,0 +1,65 @@
+# Crop list and season context for the Maharashtra pilot.
+#
+# reviewed: false  → CropPulse shows "days after sowing" only and does NOT name a
+# growth stage. Stage tables must come from an official crop calendar (e.g. state
+# agriculture department / ICAR / SAU package of practices) and be reviewed by an
+# agronomist before `reviewed` is set to true and `stages` populated.
+
+reviewed: false
+source: null
+crops:
+  soybean:   {seasons: [kharif]}
+  cotton:    {seasons: [kharif]}
+  pigeonpea: {seasons: [kharif]}
+  maize:     {seasons: [kharif, rabi]}
+  rice:      {seasons: [kharif]}
+  sorghum:   {seasons: [kharif, rabi]}
+  pearl_millet: {seasons: [kharif]}
+  green_gram:   {seasons: [kharif]}
+  black_gram:   {seasons: [kharif]}
+  wheat:     {seasons: [rabi]}
+  chickpea:  {seasons: [rabi]}
+  sugarcane: {seasons: [annual]}
+  onion:     {seasons: [kharif, rabi]}
+  other:     {seasons: [kharif, rabi, zaid, annual]}
+
+# District names as currently used. Several were renamed (Aurangabad → Chhatrapati Sambhajinagar,
+# Osmanabad → Dharashiv; Ahmednagar's renaming should be verified). Older statistics use the old names:
+# joins must go through a reviewed crosswalk, never by string match alone.
+maharashtra_districts:
+  - Ahmednagar
+  - Akola
+  - Amravati
+  - Beed
+  - Bhandara
+  - Buldhana
+  - Chandrapur
+  - Chhatrapati Sambhajinagar
+  - Dharashiv
+  - Dhule
+  - Gadchiroli
+  - Gondia
+  - Hingoli
+  - Jalgaon
+  - Jalna
+  - Kolhapur
+  - Latur
+  - Mumbai City
+  - Mumbai Suburban
+  - Nagpur
+  - Nanded
+  - Nandurbar
+  - Nashik
+  - Palghar
+  - Parbhani
+  - Pune
+  - Raigad
+  - Ratnagiri
+  - Sangli
+  - Satara
+  - Sindhudurg
+  - Solapur
+  - Thane
+  - Wardha
+  - Washim
+  - Yavatmal

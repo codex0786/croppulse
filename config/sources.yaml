@@ -1,0 +1,189 @@
+# CropPulse source registry (static metadata). Operational state (last success,
+# observed latency, current status) is tracked in the data_sources table and
+# exposed at GET /api/v1/sources.
+#
+# "verified_on" records when the endpoint/metadata below was checked against the
+# live service by the CropPulse build session. Re-verify before relying on it.
+
+sources:
+  modis_mod13q1:
+    name: "MODIS/Terra Vegetation Indices 16-Day L3 Global 250m SIN Grid (MOD13Q1), Collection 6.1"
+    provider: "NASA LP DAAC; subsets served by ORNL DAAC MODIS/VIIRS Web Service (TESViS)"
+    collection_id: "MOD13Q1.061"
+    documentation:
+      - "https://lpdaac.usgs.gov/products/mod13q1v061/"
+      - "https://modis.ornl.gov/data/modis_webservice.html"
+    access: "HTTPS REST, no authentication: https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset"
+    license: "NASA Earth science data: open, no restrictions on reuse; cite the product DOI (10.5067/MODIS/MOD13Q1.061) and ORNL DAAC."
+    spatial_resolution: "~231.66 m sinusoidal grid pixel (≈5.4 ha)"
+    temporal_resolution: "16-day composite (23 per year); per-pixel acquisition day in composite_day_of_the_year band"
+    units: "NDVI/EVI dimensionless; stored scaled ×0.0001, fill −3000, valid range −2000..10000"
+    coverage: "Global land, 2000-02-18 onward"
+    quality_flags: "250m_16_days_pixel_reliability: 0 good, 1 marginal, 2 snow/ice, 3 cloudy, −1 fill"
+    typical_latency: "Composite period end + ~1–3 weeks (observed: latest 2026-09-14 composite available on 2026-10-15)"
+    limitations:
+      - "A 250 m pixel can mix several fields, roads, trees and settlements; it cannot resolve most smallholder plots."
+      - "16-day maximum-value composite: not a live image; the best-quality day inside the period is selected per pixel."
+      - "ORNL subsets are delivered on the native grid; the build session observed repeated values in neighbouring cells, so per-pixel independence must not be assumed."
+      - "Persistent monsoon cloud reduces valid observations in kharif."
+    verified_on: "2026-10-15"
+    adapter: "croppulse.sources.modis_ornl.ModisOrnlAdapter"
+
+  modis_mcd12q1:
+    name: "MODIS/Terra+Aqua Land Cover Type Yearly L3 Global 500m SIN Grid (MCD12Q1), Collection 6.1"
+    provider: "NASA LP DAAC; subsets served by ORNL DAAC TESViS"
+    collection_id: "MCD12Q1.061"
+    documentation:
+      - "https://lpdaac.usgs.gov/products/mcd12q1v061/"
+    access: "HTTPS REST, no authentication"
+    license: "Open NASA data; cite DOI 10.5067/MODIS/MCD12Q1.061"
+    spatial_resolution: "~463 m"
+    temporal_resolution: "Annual"
+    units: "IGBP class code (LC_Type1); 12 Croplands, 14 Cropland/Natural Vegetation Mosaic, 13 Urban"
+    coverage: "Global, 2001 onward (latest year available at verification: 2024)"
+    quality_flags: "QC band; fill 255"
+    typical_latency: "More than one year"
+    limitations:
+      - "Used only as a coarse cropland-context check, not as a crop-type map."
+      - "Classification uncertainty is substantial in fragmented smallholder landscapes."
+    verified_on: "2026-10-15"
+    adapter: "croppulse.sources.modis_ornl.LandCoverAdapter"
+
+  nasa_power_daily:
+    name: "NASA POWER Daily Meteorology (Agroclimatology community)"
+    provider: "NASA Langley Research Center POWER Project"
+    collection_id: "POWER Daily API v2 (temporal/daily/point, community=AG)"
+    documentation:
+      - "https://power.larc.nasa.gov/docs/services/api/temporal/daily/"
+      - "https://power.larc.nasa.gov/docs/methodology/"
+    access: "HTTPS REST, no authentication"
+    license: "Open; POWER asks users to acknowledge the NASA Langley Research Center POWER Project."
+    spatial_resolution: "Meteorology from MERRA-2 / GEOS (0.5° × 0.625°); solar from CERES/FLASHFlux (1°)"
+    temporal_resolution: "Daily, local solar time (LST)"
+    units: "PRECTOTCORR mm/day; T2M, T2M_MAX, T2M_MIN °C; RH2M %; ALLSKY_SFC_SW_DWN MJ/m²/day (units read from each response header)"
+    coverage: "Global; meteorology 1981 onward"
+    quality_flags: "Fill value −999 (read from response header)"
+    typical_latency: "Several days; most recent days return fill (observed 3 trailing fill days on 2026-10-15)"
+    limitations:
+      - "Reanalysis-model output on a coarse grid, not a station or field measurement."
+      - "PRECTOTCORR is MERRA-2 bias-corrected precipitation, not GPM IMERG; convective rainfall is smoothed."
+      - "Historical observations, not a forecast."
+    verified_on: "2026-10-15"
+    adapter: "croppulse.sources.nasa_power.NasaPowerAdapter"
+
+  gpm_imerg:
+    name: "GPM IMERG Final/Late Precipitation L3 Daily 0.1° (GPM_3IMERGDF / GPM_3IMERGDL), V07"
+    provider: "NASA GES DISC"
+    collection_id: "GPM_3IMERGDF.07 / GPM_3IMERGDL.07"
+    documentation:
+      - "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGDF_07/summary"
+    access: "Earthdata Login required (OPeNDAP / HTTPS); set CROPPULSE_EARTHDATA_TOKEN"
+    license: "Open NASA data; Earthdata account required"
+    spatial_resolution: "0.1°"
+    temporal_resolution: "Daily (Late ~14 h latency, Final ~3.5 months)"
+    units: "mm/day"
+    coverage: "60°N–60°S"
+    quality_flags: "precipitation_cnt / randomError fields"
+    typical_latency: "Late run ≈ 12–24 h; Final run ≈ 3.5 months"
+    limitations:
+      - "Not implemented against the live service in this build: no Earthdata credentials were available."
+    verified_on: null
+    adapter: "croppulse.sources.earthdata.GpmImergAdapter"
+
+  smap_l4:
+    name: "SMAP L4 Global 3-hourly 9 km EASE-Grid Surface and Root Zone Soil Moisture (SPL4SMGP), V7"
+    provider: "NASA NSIDC DAAC"
+    collection_id: "SPL4SMGP.007"
+    documentation:
+      - "https://nsidc.org/data/spl4smgp"
+    access: "Earthdata Login required"
+    license: "Open NASA data; Earthdata account required"
+    spatial_resolution: "9 km"
+    temporal_resolution: "3-hourly"
+    units: "m³/m³"
+    coverage: "Global, 2015 onward"
+    quality_flags: "Analysis uncertainty fields"
+    typical_latency: "~2–3 days"
+    limitations:
+      - "Model-assimilation product; supporting indicator only, never direct proof of plant water stress."
+      - "Not implemented against the live service in this build: no Earthdata credentials were available."
+    verified_on: null
+    adapter: "croppulse.sources.earthdata.SmapAdapter"
+
+  imd_advisories:
+    name: "India Meteorological Department warnings and agromet advisories"
+    provider: "India Meteorological Department"
+    collection_id: "manual"
+    documentation:
+      - "https://mausam.imd.gov.in/"
+    access: "No supported programmatic access established; advisories are entered manually by an admin with the official URL."
+    license: "Government of India content; attribute IMD and link the original."
+    spatial_resolution: "District / sub-division"
+    temporal_resolution: "As issued"
+    units: "Text"
+    coverage: "India"
+    quality_flags: "n/a"
+    typical_latency: "Depends on the admin who enters it"
+    limitations:
+      - "CropPulse does not scrape IMD; it never generates forecasts or warnings itself."
+    verified_on: null
+    adapter: "manual"
+
+  des_crop_statistics:
+    name: "District-wise Area, Production and Yield statistics (DES, Ministry of Agriculture & Farmers Welfare)"
+    provider: "Directorate of Economics & Statistics, DA&FW"
+    collection_id: "manual-import"
+    documentation:
+      - "https://data.desagri.gov.in/website/crops-report-district-level-web"
+      - "https://www.data.gov.in/"
+    access: "Manual CSV export imported with scripts/import_crop_stats.py (schema-validated)."
+    license: "Government Open Data License – India (verify on the download page)"
+    spatial_resolution: "District"
+    temporal_resolution: "Agricultural year / season"
+    units: "Area ha; production tonnes (bales for cotton — not directly comparable); yield t/ha"
+    coverage: "India, multi-decade (with district boundary changes)"
+    quality_flags: "Revisions between advance and final estimates"
+    typical_latency: "Months to years"
+    limitations:
+      - "No file has been imported in this build; yield prediction stays disabled."
+      - "A district statistic is never a field-level label."
+    verified_on: null
+    adapter: "croppulse.sources.crop_stats"
+
+  district_boundaries:
+    name: "District boundaries (candidate: NWIC National Water Data Portal)"
+    provider: "National Water Informatics Centre"
+    collection_id: "manual"
+    documentation:
+      - "https://nwdp.nwic.gov.in/dataset/district-boundary"
+    access: "Manual download; licence and boundary vintage to be verified"
+    license: "To be verified before import"
+    spatial_resolution: "Vector"
+    temporal_resolution: "Boundary vintage"
+    units: "n/a"
+    coverage: "India"
+    quality_flags: "Geometry validity checked on import"
+    typical_latency: "n/a"
+    limitations:
+      - "Not imported. Regional views aggregate by the district name selected at field registration."
+    verified_on: null
+    adapter: "manual"
+
+  market_prices:
+    name: "Agmarknet / e-NAM mandi prices"
+    provider: "DMI / SFAC"
+    collection_id: "disabled"
+    documentation:
+      - "https://www.enam.gov.in/"
+    access: "Not integrated; feature flag CROPPULSE_FEATURE_MARKET_PRICES=false"
+    license: "To be verified"
+    spatial_resolution: "Mandi"
+    temporal_resolution: "Daily"
+    units: "INR/quintal"
+    coverage: "India"
+    quality_flags: "n/a"
+    typical_latency: "n/a"
+    limitations:
+      - "Isolated, disabled module. Reported mandi prices are not farm-gate prices or forecasts."
+    verified_on: null
+    adapter: "disabled"

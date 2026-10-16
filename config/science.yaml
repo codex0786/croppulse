@@ -1,0 +1,50 @@
+# CropPulse scientific configuration.
+#
+# EVERY threshold in this file is an UNVALIDATED DEFAULT chosen for screening
+# purposes. None has been empirically calibrated against independent Indian
+# crop-stress events. They must be re-evaluated with the validation protocol
+# (docs/VALIDATION_PROTOCOL.md) before any operational claim is made.
+# Changing this file changes the config version recorded on every assessment.
+
+version_label: "screening-rules-0.1-unvalidated"
+
+vegetation:
+  product: MOD13Q1            # Terra MODIS 16-day VI, 250 m, collection 6.1
+  index: NDVI                 # EVI is stored too; NDVI drives the screening rules
+  # MOD13Q1 pixel_reliability: 0=good, 1=marginal, 2=snow/ice, 3=cloudy, -1=fill
+  accepted_reliability: [0, 1]
+  reference_years: 15         # N most recent complete years strictly before the target year
+  min_reference_samples: 8    # fewer → anomaly is "insufficient_reference"
+  pool_adjacent_composites: 0 # 0 = exact composite period only; 1 = also ±1 composite
+  min_valid_pixel_fraction: 0.5
+  variance_floor: 0.005       # NDVI units; below this σ (or scaled MAD) the anomaly is undefined
+  low_anomaly_robust_z: -1.5  # screening threshold (unvalidated)
+  low_anomaly_percentile: 10  # screening threshold (unvalidated), percent
+  persistence_composites: 2   # consecutive low composites before "persistent"
+  max_age_days_for_assessment: 48   # composite END date to assessment time
+  fetch_window_km: 1          # kmAboveBelow / kmLeftRight for field subsets
+
+weather:
+  product: NASA_POWER_DAILY
+  reference_years: 30          # N most recent complete years strictly before the target year
+  min_reference_years: 20
+  rain_windows_days: [7, 30, 60, 90]
+  rainy_day_mm: 2.5            # IMD "rainy day" convention (>= 2.5 mm)
+  min_window_coverage: 0.9     # fraction of days with valid data
+  deficit_percentile: 20       # 30-day rainfall at/below this reference percentile → indicator (unvalidated)
+  heat_tmax_c: 40.0            # count of days with Tmax >= this (unvalidated, crop-agnostic)
+  heat_window_days: 14
+  heat_days_trigger: 3
+  dry_spell_trigger_days: 14   # current run of days < rainy_day_mm (unvalidated)
+  max_age_days_for_assessment: 10
+
+land_cover:
+  product: MCD12Q1
+  band: LC_Type1               # IGBP classification
+  cropland_classes: [12, 14]   # 12 = Croplands, 14 = Cropland/Natural Vegetation Mosaic
+
+risk:
+  # Model approval status for farmer-facing alerts. While false, farmer messages are
+  # limited to "check your field / ask an expert" and every elevated case goes to experts.
+  model_validated: false
+  assessment_ttl_days: 16
