@@ -18,7 +18,9 @@ from datetime import UTC, date, datetime
 import numpy as np
 import pandas as pd
 
-from croppulse.config import REPO_ROOT, config_version, get_settings
+import copy
+
+from croppulse.config import REPO_ROOT, config_version, get_settings, science_config
 from croppulse.db import get_sessionmaker
 from croppulse.models import EvaluationRun
 from croppulse.research.evaluation import (
@@ -120,6 +122,7 @@ It does not show that any indicator predicts crop stress or yield loss. No indep
 """
     )
     bt = descriptive_backtest(man)
+    cfg_pool0 = science_config()["vegetation"]["pool_adjacent_composites"]
     bt.to_csv(ART / "backtest_predictions.csv", index=False)
     states = bt.groupby("unit")["state"].value_counts().unstack(fill_value=0)
     burden = bt.groupby("unit").agg(
@@ -145,6 +148,24 @@ It does not show that any indicator predicts crop stress or yield loss. No indep
         "spearman_ndvi_robust_z_vs_rain30_percentile": round(spearman, 3),
         "labelled_metrics": "not computable: no independent event labels",
     }
+    # Label-free sensitivity: how reference pooling changes data sufficiency (no outcome labels are used).
+    sens_rows = []
+    for pool in (0, 1):
+        cfg = copy.deepcopy(science_config())
+        cfg["vegetation"]["pool_adjacent_composites"] = pool
+        b2 = bt if pool == cfg_pool0 else descriptive_backtest(man, cfg)
+        sens_rows.append(
+            {
+                "pool_adjacent_composites": pool,
+                "abstention_rate": round(float((b2["state"] == "insufficient_evidence").mean()), 3),
+                "median_reference_n": float(b2["ndvi_reference_n"].median()),
+                "watch_or_higher_rate": round(float(b2["flag_watch_or_higher"].mean()), 3),
+                "elevated_rate": round(float(b2["flag_elevated"].mean()), 3),
+            }
+        )
+    sens = pd.DataFrame(sens_rows)
+    by_date = bt.assign(as_of_md=bt["as_of"].astype(str).str[5:]).groupby("as_of_md")["state"].value_counts().unstack(fill_value=0)
+    weather_only = bt[(bt["flag_watch_or_higher"]) & (bt["ndvi_robust_z"] > 1.5)]
     (REPORTS / "BASELINE_BACKTEST.md").write_text(
         f"""# Baseline screening backtest — descriptive, UNLABELLED (REAL DATA)
 
@@ -172,6 +193,25 @@ State counts per unit:
 """
         + "\n".join(f"| {k} | {v} |" for k, v in metrics.items())
         + """
+
+## States by as-of date
+
+""" + md_table(by_date.reset_index()) + """
+
+## Label-free sensitivity: reference pooling
+
+Pooling ±1 adjacent 16-day composite enlarges the reference sample under monsoon cloud at the cost of mixing
+phenological stages. No outcome labels were used; this changes data sufficiency, not measured accuracy.
+
+""" + md_table(sens) + """
+
+## Observed behaviour worth reviewing
+
+- """ + str(len(weather_only)) + """ assessment(s) reached `watch` from weather indicators while NDVI was well **above** the reference
+  (robust z > 1.5). The rules let a rainfall deficit raise `watch` regardless of strongly positive vegetation evidence;
+  agronomists should decide whether that is desirable (it may be appropriate early in a dry spell, or a false alarm).
+- Rainfall-deficit indicators fired at all four grid cells in 2018. Whether this matches documented events must be
+  checked against official sources before any claim is made.
 
 ## Interpretation and limits
 

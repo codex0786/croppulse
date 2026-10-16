@@ -19,6 +19,10 @@ report and unlabelled backtest, documentation, Docker/CI files. See `reports/FIN
 5. **Reviewed localisation and crop calendar**: Marathi review with agronomists and native speakers; official crop
    calendars → growth-stage aware baselines and messages.
 
+## Decisions for the pilot team (from the real-data backtest)
+- Reference pooling: ±1 composite cuts kharif abstention from 71 % to 53 % but mixes phenological stages (reports/BASELINE_BACKTEST.md).
+- Whether a rainfall deficit alone should raise `watch` when NDVI is strongly above normal (3 such cases observed).
+
 ## Later
 - DES statistics import + district boundary (NWIC) import with PostGIS; district-level regional maps.
 - Cache-aligned MODIS chunking (per-year chunks) and a shared pixel cache across nearby fields; ORNL batch orders.

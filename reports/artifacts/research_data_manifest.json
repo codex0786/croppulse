@@ -1,0 +1,191 @@
+{
+  "generated_at": "2026-10-15T16:23:01.263204+00:00",
+  "points": {
+    "S1": {
+      "lat": 19.8,
+      "lon": 75.7,
+      "footprint_area_ha": 57.0035,
+      "pixel_rule": "pixel_center_in_polygon",
+      "pixels_selected": 13,
+      "window_km": 1,
+      "modis_file": "processed/research/S1_mod13q1.parquet",
+      "modis_sha256": "547f89e4e0cf32b5544d5bb3390ae378183268685024f7b64cf2141bf7c1c06c",
+      "modis_rows": 569,
+      "modis_retrieved_at": "2026-10-15 15:31:54.053743+00:00",
+      "modis_warnings": [],
+      "land_cover": {
+        "year": 2024,
+        "lc_type1": 12
+      },
+      "raw_cache_files": 114,
+      "power_cell": "power_p020.00_p075.625"
+    },
+    "S3": {
+      "lat": 19.6,
+      "lon": 77.1,
+      "footprint_area_ha": 57.0748,
+      "pixel_rule": "pixel_center_in_polygon",
+      "pixels_selected": 13,
+      "window_km": 1,
+      "modis_file": "processed/research/S3_mod13q1.parquet",
+      "modis_sha256": "076264f401796b1fe30126d872981e47a597d85d1680aa01053add870821ddee",
+      "modis_rows": 569,
+      "modis_retrieved_at": "2026-10-15 15:31:57.699394+00:00",
+      "modis_warnings": [],
+      "land_cover": {
+        "year": 2024,
+        "lc_type1": 12
+      },
+      "raw_cache_files": 114,
+      "power_cell": "power_p019.50_p076.875"
+    },
+    "S5": {
+      "lat": 18.7,
+      "lon": 76.0,
+      "footprint_area_ha": 57.387,
+      "pixel_rule": "pixel_center_in_polygon",
+      "pixels_selected": 13,
+      "window_km": 1,
+      "modis_file": "processed/research/S5_mod13q1.parquet",
+      "modis_sha256": "ce1c3a737bf83382414428dc25604591a99e40840439fdd3da76174f8c472b6a",
+      "modis_rows": 569,
+      "modis_retrieved_at": "2026-10-15 15:31:53.989077+00:00",
+      "modis_warnings": [],
+      "land_cover": {
+        "year": 2024,
+        "lc_type1": 12
+      },
+      "raw_cache_files": 114,
+      "power_cell": "power_p018.50_p076.250"
+    },
+    "S7": {
+      "lat": 19.95,
+      "lon": 75.95,
+      "footprint_area_ha": 56.9496,
+      "pixel_rule": "pixel_center_in_polygon",
+      "pixels_selected": 14,
+      "window_km": 1,
+      "modis_file": "processed/research/S7_mod13q1.parquet",
+      "modis_sha256": "9d5ad3f08c3b64dd22a7eea980d0cd89b29ac85154223d9dbbc7de5bc453a255",
+      "modis_rows": 569,
+      "modis_retrieved_at": "2026-10-15 15:19:00.959711+00:00",
+      "modis_warnings": [],
+      "land_cover": {
+        "year": 2024,
+        "lc_type1": 12
+      },
+      "raw_cache_files": 114,
+      "power_cell": "power_p020.00_p076.250"
+    }
+  },
+  "power_cells": {
+    "power_p020.00_p075.625": {
+      "lat": 20.0,
+      "lon": 75.625,
+      "file": "processed/research/power_p020.00_p075.625.parquet",
+      "sha256": "9368337d7eb721d8bcad15d94200f973be39d5fcd82e97457f5c7cf3ea2e8b1c",
+      "rows": 16724,
+      "last_valid_date": "2026-10-12",
+      "units": {
+        "PRECTOTCORR": "mm/day",
+        "T2M_MAX": "C",
+        "T2M_MIN": "C",
+        "T2M": "C",
+        "RH2M": "%",
+        "ALLSKY_SFC_SW_DWN": "MJ/m^2/day"
+      },
+      "sources": [
+        "SYN1DEG",
+        "FLASHFLUX",
+        "GEOSIT",
+        "SRB",
+        "MERRA2",
+        "POWER"
+      ],
+      "api_version": "v2.10.0",
+      "time_standard": "LST",
+      "retrieved_at": "2026-10-15 16:15:12.101626+00:00"
+    },
+    "power_p019.50_p076.875": {
+      "lat": 19.5,
+      "lon": 76.875,
+      "file": "processed/research/power_p019.50_p076.875.parquet",
+      "sha256": "ad595e48264d27ba2b96ee601f9bca7a165d040b47bb6cf0f9351fd89ee49336",
+      "rows": 16724,
+      "last_valid_date": "2026-10-12",
+      "units": {
+        "PRECTOTCORR": "mm/day",
+        "T2M_MAX": "C",
+        "T2M_MIN": "C",
+        "T2M": "C",
+        "RH2M": "%",
+        "ALLSKY_SFC_SW_DWN": "MJ/m^2/day"
+      },
+      "sources": [
+        "FLASHFLUX",
+        "SYN1DEG",
+        "SRB",
+        "GEOSIT",
+        "MERRA2",
+        "POWER"
+      ],
+      "api_version": "v2.10.0",
+      "time_standard": "LST",
+      "retrieved_at": "2026-10-15 16:17:54.844113+00:00"
+    },
+    "power_p018.50_p076.250": {
+      "lat": 18.5,
+      "lon": 76.25,
+      "file": "processed/research/power_p018.50_p076.250.parquet",
+      "sha256": "c2107d23b928ebde781203e509d98707e84a1f3e3a2375f3bbe3c2d81155aeff",
+      "rows": 16724,
+      "last_valid_date": "2026-10-12",
+      "units": {
+        "PRECTOTCORR": "mm/day",
+        "T2M_MAX": "C",
+        "T2M_MIN": "C",
+        "T2M": "C",
+        "RH2M": "%",
+        "ALLSKY_SFC_SW_DWN": "MJ/m^2/day"
+      },
+      "sources": [
+        "FLASHFLUX",
+        "SYN1DEG",
+        "SRB",
+        "GEOSIT",
+        "MERRA2",
+        "POWER"
+      ],
+      "api_version": "v2.10.0",
+      "time_standard": "LST",
+      "retrieved_at": "2026-10-15 16:20:26.366115+00:00"
+    },
+    "power_p020.00_p076.250": {
+      "lat": 20.0,
+      "lon": 76.25,
+      "file": "processed/research/power_p020.00_p076.250.parquet",
+      "sha256": "93e2c1af1d6e3026f9bd2066267a47c39e7e16c3764230dc96ae012fdd33d493",
+      "rows": 16724,
+      "last_valid_date": "2026-10-12",
+      "units": {
+        "PRECTOTCORR": "mm/day",
+        "T2M_MAX": "C",
+        "T2M_MIN": "C",
+        "T2M": "C",
+        "RH2M": "%",
+        "ALLSKY_SFC_SW_DWN": "MJ/m^2/day"
+      },
+      "sources": [
+        "FLASHFLUX",
+        "SYN1DEG",
+        "SRB",
+        "GEOSIT",
+        "MERRA2",
+        "POWER"
+      ],
+      "api_version": "v2.10.0",
+      "time_standard": "LST",
+      "retrieved_at": "2026-10-15 16:23:01.163239+00:00"
+    }
+  }
+}

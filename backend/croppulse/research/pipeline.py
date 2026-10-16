@@ -181,9 +181,9 @@ def coverage_tables(man: dict[str, Any]) -> dict[str, pd.DataFrame]:
     return {"per_point": pd.DataFrame(per_point), "accepted_by_month": pd.concat(per_month, axis=1).round(3)}
 
 
-def descriptive_backtest(man: dict[str, Any]) -> pd.DataFrame:
+def descriptive_backtest(man: dict[str, Any], sci: dict[str, Any] | None = None) -> pd.DataFrame:
     cfg = load_points()
-    sci = science_config()
+    sci = sci or science_config()
     frames = []
     for pid in man["points"]:
         m, w = _load_point(pid, man)
