@@ -29,23 +29,23 @@ class Irrigation(StrEnum):
 
 
 class SourceStatus(StrEnum):
-    live_tested = "live_tested"                  # retrieved from the live service in this deployment
+    live_tested = "live_tested"  # retrieved from the live service in this deployment
     implemented_untested = "implemented_untested"
-    not_configured = "not_configured"            # credentials or settings missing
-    unavailable = "unavailable"                  # last attempt failed
-    manual_entry = "manual_entry"                # human-entered from an official source
-    fixture_only = "fixture_only"                # synthetic test data only
+    not_configured = "not_configured"  # credentials or settings missing
+    unavailable = "unavailable"  # last attempt failed
+    manual_entry = "manual_entry"  # human-entered from an official source
+    fixture_only = "fixture_only"  # synthetic test data only
 
 
 class DataKind(StrEnum):
     """How a displayed value came to exist. Shown on every value in the UI."""
 
-    observed = "observed"            # satellite/analysis product value
-    derived = "derived"              # computed from observations (aggregates, anomalies)
-    estimated = "estimated"          # model output
+    observed = "observed"  # satellite/analysis product value
+    derived = "derived"  # computed from observations (aggregates, anomalies)
+    estimated = "estimated"  # model output
     farmer_reported = "farmer_reported"
     expert_verified = "expert_verified"
-    synthetic = "synthetic"          # test fixture; never shown as real
+    synthetic = "synthetic"  # test fixture; never shown as real
 
 
 class RiskState(StrEnum):
@@ -136,7 +136,7 @@ class ApprovalStatus(StrEnum):
 
 
 class ConsentPurpose(StrEnum):
-    core_service = "core_service"              # processing the field to show its own intelligence
+    core_service = "core_service"  # processing the field to show its own intelligence
     share_with_organization = "share_with_organization"
     expert_review = "expert_review"
     aggregated_research = "aggregated_research"

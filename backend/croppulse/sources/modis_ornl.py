@@ -151,7 +151,9 @@ class ModisOrnlAdapter:
         self.fetcher = fetcher or HttpFetcher(self.source_id)
 
     def list_dates(self, lat: float, lon: float) -> list[tuple[str, date]]:
-        raw = self.fetcher.get_json(f"{BASE_URL}/{self.product}/dates", {"latitude": round(lat, 5), "longitude": round(lon, 5)}, use_cache=False, cacheable=False)
+        raw = self.fetcher.get_json(
+            f"{BASE_URL}/{self.product}/dates", {"latitude": round(lat, 5), "longitude": round(lon, 5)}, use_cache=False, cacheable=False
+        )
         if not isinstance(raw.payload, dict) or "dates" not in raw.payload:
             raise SourceSchemaError("ORNL dates response missing 'dates'")
         return [(d["modis_date"], date.fromisoformat(d["calendar_date"])) for d in raw.payload["dates"]]
@@ -188,6 +190,7 @@ class ModisOrnlAdapter:
         min_valid_fraction: float,
         window_km_min: int,
         today: date | None = None,
+        include_evi: bool = True,
     ) -> FieldVegetationSeries:
         lat, lon = centroid
         today = today or datetime.now(UTC).date()
@@ -205,7 +208,7 @@ class ModisOrnlAdapter:
             # recent chunks are always re-fetched so provider reprocessing is picked up.
             use_cache = (today - chunk[-1][1]).days > 400
             by_band: dict[str, RawResponse] = {}
-            for band in (BAND_NDVI, BAND_EVI, BAND_REL):
+            for band in (BAND_NDVI, BAND_EVI, BAND_REL) if include_evi else (BAND_NDVI, BAND_REL):
                 by_band[band] = self.fetch_subset(band, lat, lon, chunk[0][0], chunk[-1][0], km, use_cache=use_cache)
                 ref = relpath(by_band[band].cache_path)
                 if ref:
@@ -218,7 +221,7 @@ class ModisOrnlAdapter:
                     geojson, float(hdr["xllcorner"]), float(hdr["yllcorner"]), float(hdr["cellsize"]), int(hdr["nrows"]), int(hdr["ncols"])
                 )
             nd_items = {s["modis_date"]: s for s in hdr["subset"]}
-            ev_items = {s["modis_date"]: s for s in by_band[BAND_EVI].payload["subset"]}
+            ev_items = {s["modis_date"]: s for s in by_band[BAND_EVI].payload["subset"]} if include_evi else {}
             rel_items = {s["modis_date"]: s for s in by_band[BAND_REL].payload["subset"]}
             for mdate, cal in chunk:
                 if mdate not in nd_items or mdate not in rel_items:
@@ -274,7 +277,9 @@ class LandCoverAdapter:
         self.fetcher = fetcher or HttpFetcher(self.source_id)
 
     def latest(self, lat: float, lon: float) -> LandCoverResult:
-        raw = self.fetcher.get_json(f"{BASE_URL}/{self.product}/dates", {"latitude": round(lat, 5), "longitude": round(lon, 5)}, use_cache=False, cacheable=False)
+        raw = self.fetcher.get_json(
+            f"{BASE_URL}/{self.product}/dates", {"latitude": round(lat, 5), "longitude": round(lon, 5)}, use_cache=False, cacheable=False
+        )
         dates = raw.payload.get("dates") if isinstance(raw.payload, dict) else None
         if not dates:
             raise SourceSchemaError("MCD12Q1 dates response empty")

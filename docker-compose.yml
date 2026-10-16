@@ -1,0 +1,36 @@
+# Local, production-like stack: PostGIS + API + web. Not a hardened production deployment
+# (no TLS termination, secrets from .env). See docs/DEPLOYMENT.md.
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: croppulse
+      POSTGRES_USER: croppulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U croppulse -d croppulse"]
+      interval: 10s
+      retries: 10
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      CROPPULSE_ENVIRONMENT: ${CROPPULSE_ENVIRONMENT:-production}
+      CROPPULSE_DATABASE_URL: postgresql+psycopg://croppulse:${POSTGRES_PASSWORD}@db:5432/croppulse
+      CROPPULSE_SECRET_KEY: ${CROPPULSE_SECRET_KEY:?set CROPPULSE_SECRET_KEY in .env}
+      CROPPULSE_ALLOWED_ORIGINS: ${CROPPULSE_ALLOWED_ORIGINS:-http://localhost:3000}
+      CROPPULSE_EARTHDATA_TOKEN: ${CROPPULSE_EARTHDATA_TOKEN:-}
+      CROPPULSE_DATA_DIR: /app/data
+    volumes: [appdata:/app/data]
+    ports: ["8000:8000"]
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args: { NEXT_PUBLIC_API_BASE: "http://localhost:8000" }
+    depends_on: [api]
+    ports: ["3000:3000"]
+volumes:
+  dbdata: {}
+  appdata: {}

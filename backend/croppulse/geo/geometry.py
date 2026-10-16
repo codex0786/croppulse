@@ -145,8 +145,8 @@ def sinusoidal_inverse(x: float, y: float) -> tuple[float, float]:
 
 @dataclass(frozen=True)
 class PixelSelection:
-    indices: list[int]          # row-major indices into the subset's data array
-    rule: str                   # "pixel_center_in_polygon" | "pixel_containing_centroid"
+    indices: list[int]  # row-major indices into the subset's data array
+    rule: str  # "pixel_center_in_polygon" | "pixel_containing_centroid"
     total_in_window: int
     note: str | None
 
@@ -192,6 +192,5 @@ def select_pixels(
         [row * ncols + col],
         "pixel_containing_centroid",
         nrows * ncols,
-        "No MODIS pixel centre falls inside the field; the value describes the ~5.4 ha pixel containing "
-        "the field centre and may mix several land uses.",
+        "No MODIS pixel centre falls inside the field; the value describes the ~5.4 ha pixel containing the field centre and may mix several land uses.",
     )

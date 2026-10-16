@@ -54,7 +54,9 @@ def test_window_total_coverage_gate_and_no_zero_fill():
 def test_features_ignore_rows_after_as_of():
     f = _frame(40 * 365, rain=1.0)
     f.loc[date(2026, 9, 30), "PRECTOTCORR"] = 500.0  # a "future" spike relative to as_of
-    feats = compute_weather_features(f, date(2026, 9, 29), windows=[7], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14)
+    feats = compute_weather_features(
+        f, date(2026, 9, 29), windows=[7], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14
+    )
     assert feats.window_end == date(2026, 9, 29)
     assert feats.rain_window(7).total_mm == pytest.approx(7.0)
 
@@ -67,7 +69,9 @@ def test_rain_percentile_deficit_and_dry_spell():
     f = pd.DataFrame({"PRECTOTCORR": rain, "T2M_MAX": 33.0}, index=pd.Index(idx, name="date"))
     # Current year: no rain in the last 20 days.
     f.loc[[end - timedelta(days=i) for i in range(20)], "PRECTOTCORR"] = 0.0
-    feats = compute_weather_features(f, end, windows=[30], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14)
+    feats = compute_weather_features(
+        f, end, windows=[30], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14
+    )
     r = feats.rain_window(30)
     assert r.total_mm == pytest.approx(50.0) and r.reference_mean_mm == pytest.approx(150.0)
     assert r.percentile == pytest.approx(0.0) and r.deficit_pct == pytest.approx(-66.67, abs=0.01)
@@ -77,7 +81,9 @@ def test_rain_percentile_deficit_and_dry_spell():
 
 def test_dry_season_suppresses_deficit():
     f = _frame(35 * 365, rain=0.0)
-    feats = compute_weather_features(f, date(2026, 9, 30), windows=[30], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14)
+    feats = compute_weather_features(
+        f, date(2026, 9, 30), windows=[30], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14
+    )
     r = feats.rain_window(30)
     assert r.climatologically_dry and r.deficit_pct is None
 
@@ -85,5 +91,7 @@ def test_dry_season_suppresses_deficit():
 def test_dry_spell_truncated_at_missing_day():
     f = _frame(30, rain=0.0)
     f.iloc[10, 0] = np.nan
-    feats = compute_weather_features(f, date(2026, 9, 30), windows=[7], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14)
+    feats = compute_weather_features(
+        f, date(2026, 9, 30), windows=[7], reference_years=30, min_reference_years=20, min_coverage=0.9, rainy_day_mm=2.5, heat_tmax_c=40, heat_window_days=14
+    )
     assert feats.dry_spell_truncated and feats.current_dry_spell_days == 19

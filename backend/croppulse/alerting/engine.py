@@ -37,9 +37,7 @@ def rules() -> dict[str, Any]:
 
 
 def expire_alerts(session: Session, now: datetime) -> int:
-    res = session.execute(
-        update(Alert).where(Alert.status == AlertStatus.active, Alert.expires_at <= now).values(status=AlertStatus.expired)
-    )
+    res = session.execute(update(Alert).where(Alert.status == AlertStatus.active, Alert.expires_at <= now).values(status=AlertStatus.expired))
     return int(res.rowcount or 0)  # type: ignore[attr-defined]
 
 
@@ -61,9 +59,7 @@ def evaluate_assessment(session: Session, assessment: RiskAssessment, field: Fie
             return AlertDecision("suppressed_stale_data")
 
     key = f"{field.id}:condition"
-    active = session.scalars(
-        select(Alert).where(Alert.dedupe_key == key, Alert.status == AlertStatus.active).order_by(Alert.created_at.desc())
-    ).first()
+    active = session.scalars(select(Alert).where(Alert.dedupe_key == key, Alert.status == AlertStatus.active).order_by(Alert.created_at.desc())).first()
     outcome = "created"
     if active is not None:
         if RISK_ORDER[state] <= RISK_ORDER[RiskState(active.severity)]:
@@ -108,7 +104,11 @@ def _queue_deliveries(session: Session, alert: Alert, field: Field) -> None:
     if latest_consent(session, field.owner_id, ConsentPurpose.notifications):
         session.add(NotificationDelivery(alert_id=alert.id, user_id=field.owner_id, channel="email", status=DeliveryStatus.pending))
     else:
-        session.add(NotificationDelivery(alert_id=alert.id, user_id=field.owner_id, channel="email", status=DeliveryStatus.suppressed, last_error="no_notification_consent"))
+        session.add(
+            NotificationDelivery(
+                alert_id=alert.id, user_id=field.owner_id, channel="email", status=DeliveryStatus.suppressed, last_error="no_notification_consent"
+            )
+        )
 
 
 class NotificationProvider(Protocol):
@@ -126,7 +126,12 @@ class DevOutboxProvider:
         out = get_settings().data_dir / "outbox"
         out.mkdir(parents=True, exist_ok=True)
         with open(out / "notifications.jsonl", "a", encoding="utf-8") as fh:
-            fh.write(json.dumps({"at": utcnow().isoformat(), "user_id": user.id, "alert_id": alert.id, "title_key": alert.title_key, "language": user.preferred_language}) + "\n")
+            fh.write(
+                json.dumps(
+                    {"at": utcnow().isoformat(), "user_id": user.id, "alert_id": alert.id, "title_key": alert.title_key, "language": user.preferred_language}
+                )
+                + "\n"
+            )
 
 
 def provider() -> NotificationProvider | None:

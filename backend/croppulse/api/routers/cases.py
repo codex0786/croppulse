@@ -156,10 +156,7 @@ def case_queue(
     q = select(ExpertCase)
     if user.role != Role.admin:
         q = q.where(ExpertCase.organization_id == user.organization_id)
-    if status_filter:
-        q = q.where(ExpertCase.status == status_filter.value)
-    else:
-        q = q.where(ExpertCase.status != CaseStatus.closed)
+    q = q.where(ExpertCase.status == status_filter.value) if status_filter else q.where(ExpertCase.status != CaseStatus.closed)
     cases = session.scalars(q.order_by(ExpertCase.priority, ExpertCase.created_at).limit(limit * 3)).all()
     out = [_case_out(session, c) for c in cases]
     if district:
@@ -215,7 +212,7 @@ def add_event(case_id: str, body: CaseEventIn, user: User = Depends(require_role
     case = _load_case(session, case_id, user)
     if case.status == CaseStatus.closed:
         raise HTTPException(status.HTTP_409_CONFLICT, "Case is closed; reopen it first")
-    data = {}
+    data: dict[str, str | None] = {}
     if body.kind == "info_request":
         case.status = CaseStatus.info_requested
     elif body.kind == "inspection_scheduled":
@@ -306,5 +303,14 @@ def field_recommendations(field_id: str, user: User = Depends(current_user), ses
     for c in cases:
         for e in c.events:
             if e.authored_by == "human" and e.kind in ("recommendation", "info_request", "inspection_scheduled", "verification"):
-                out.append({"case_id": c.id, "kind": e.kind, "body": e.body, "data": e.data, "created_at": e.created_at, "data_kind": "expert_verified" if e.kind == "verification" else "expert_authored"})
+                out.append(
+                    {
+                        "case_id": c.id,
+                        "kind": e.kind,
+                        "body": e.body,
+                        "data": e.data,
+                        "created_at": e.created_at,
+                        "data_kind": "expert_verified" if e.kind == "verification" else "expert_authored",
+                    }
+                )
     return sorted(out, key=lambda x: x["created_at"], reverse=True)  # type: ignore[arg-type, return-value]

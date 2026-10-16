@@ -79,7 +79,11 @@ def _aggregate(session: Session, fields: list[Field], key_fn: Any, crop: str | N
             continue
         states = Counter((ra.state if ra and ra.expires_at > now else "no_current_assessment") for _, ra in items)
         veg_current = sum(1 for _, ra in items if ra and (ra.freshness.get("vegetation") or {}).get("status") == "current")
-        latest_veg = max(((ra.freshness.get("vegetation") or {}).get("period_end") for _, ra in items if ra and (ra.freshness.get("vegetation") or {}).get("period_end")), default=None)
+        veg_ends: list[str] = [str(pe) for _, ra in items if ra and (pe := (ra.freshness.get("vegetation") or {}).get("period_end"))]
+        latest_veg = max(
+            veg_ends,
+            default=None,
+        )
         out.append(
             {
                 "key": key,
@@ -106,7 +110,11 @@ def regional_summary(
     No field identifiers, names or coordinates are returned. Groups with fewer than
     MIN_CELL_SIZE fields are suppressed. Grid cells are the ~0.5° NASA POWER cells.
     """
-    fields = [f for f in session.scalars(select(Field).where(Field.deleted_at.is_(None))).all() if latest_consent(session, f.owner_id, ConsentPurpose.aggregated_research)]
+    fields = [
+        f
+        for f in session.scalars(select(Field).where(Field.deleted_at.is_(None))).all()
+        if latest_consent(session, f.owner_id, ConsentPurpose.aggregated_research)
+    ]
     districts = _aggregate(session, fields, lambda f: f.district, crop, season)
     cells = _aggregate(session, fields, lambda f: grid_cell_for(f.centroid_lat, f.centroid_lon).key, crop, season)
     cell_out = []
@@ -134,7 +142,12 @@ def regional_summary(
             r = feats.rain_window(30)
             window_end = feats.window_end.isoformat() if feats.window_end else None
             if r:
-                rain30 = {"total_mm": r.total_mm, "percentile": r.percentile, "reference_mean_mm": r.reference_mean_mm, "climatologically_dry": r.climatologically_dry}
+                rain30 = {
+                    "total_mm": r.total_mm,
+                    "percentile": r.percentile,
+                    "reference_mean_mm": r.reference_mean_mm,
+                    "climatologically_dry": r.climatologically_dry,
+                }
         cell_out.append({**c, "cell": {"lat": cell.lat, "lon": cell.lon, "dlat": 0.5, "dlon": 0.625}, "rain_30d": rain30, "weather_window_end": window_end})
     audit(session, user, "regional.summary", "aggregate", None, crop=crop, season=season)
     session.commit()
@@ -153,7 +166,9 @@ def regional_summary(
 
 
 @router.get("/org/summary")
-def org_summary(user: User = Depends(require_roles(Role.fpo_manager, Role.agronomist)), session: Session = Depends(db), crop: str | None = None) -> dict[str, Any]:
+def org_summary(
+    user: User = Depends(require_roles(Role.fpo_manager, Role.agronomist)), session: Session = Depends(db), crop: str | None = None
+) -> dict[str, Any]:
     if not user.organization_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No organisation")
     fields = [
@@ -183,10 +198,15 @@ def org_summary(user: User = Depends(require_roles(Role.fpo_manager, Role.agrono
             }
         )
     priority = {"expert_review_recommended": 0, "elevated_risk": 1, "watch": 2, "insufficient_evidence": 3, "normal_for_reference_period": 4}
-    rows.sort(key=lambda r: (priority.get(r["state"] or "", 5), r["district"]))
+    rows.sort(key=lambda r: (priority.get(str(r["state"] or ""), 5), str(r["district"])))
     audit(session, user, "org.summary", "organization", user.organization_id)
     session.commit()
-    return {"organization_id": user.organization_id, "consenting_fields": len(rows), "fields": rows, "states": dict(Counter(r["state"] or "not_assessed" for r in rows))}
+    return {
+        "organization_id": user.organization_id,
+        "consenting_fields": len(rows),
+        "fields": rows,
+        "states": dict(Counter(r["state"] or "not_assessed" for r in rows)),
+    }
 
 
 @router.get("/org/export.csv")
@@ -229,7 +249,25 @@ def sources(session: Session = Depends(db)) -> list[dict[str, Any]]:
         out.append(
             {
                 "id": sid,
-                **{k: meta[k] for k in ("name", "provider", "collection_id", "documentation", "access", "license", "spatial_resolution", "temporal_resolution", "units", "coverage", "quality_flags", "typical_latency", "limitations", "verified_on")},
+                **{
+                    k: meta[k]
+                    for k in (
+                        "name",
+                        "provider",
+                        "collection_id",
+                        "documentation",
+                        "access",
+                        "license",
+                        "spatial_resolution",
+                        "temporal_resolution",
+                        "units",
+                        "coverage",
+                        "quality_flags",
+                        "typical_latency",
+                        "limitations",
+                        "verified_on",
+                    )
+                },
                 "status": status_,
                 "last_success_at": d.last_success_at if d else None,
                 "last_attempt_at": d.last_attempt_at if d else None,
@@ -337,9 +375,14 @@ def admin_jobs(user: User = Depends(require_roles(Role.admin)), session: Session
 
 
 @router.get("/admin/audit")
-def admin_audit(user: User = Depends(require_roles(Role.admin)), session: Session = Depends(db), limit: int = Query(100, ge=1, le=1000)) -> list[dict[str, Any]]:
+def admin_audit(
+    user: User = Depends(require_roles(Role.admin)), session: Session = Depends(db), limit: int = Query(100, ge=1, le=1000)
+) -> list[dict[str, Any]]:
     rows = session.scalars(select(AuditEvent).order_by(AuditEvent.at.desc()).limit(limit)).all()
-    return [{"at": r.at, "actor_id": r.actor_id, "action": r.action, "resource_type": r.resource_type, "resource_id": r.resource_id, "outcome": r.outcome} for r in rows]
+    return [
+        {"at": r.at, "actor_id": r.actor_id, "action": r.action, "resource_type": r.resource_type, "resource_id": r.resource_id, "outcome": r.outcome}
+        for r in rows
+    ]
 
 
 @router.get("/admin/metrics")
@@ -354,5 +397,8 @@ def admin_metrics(user: User = Depends(require_roles(Role.admin)), session: Sess
         "ingestion_jobs": dict(by_status),
         "ingestion_success_rate": round(by_status.get("succeeded", 0) / max(1, sum(by_status.values()) - by_status.get("running", 0)), 3),
         "alerts": dict(alerts),
-        "sources": {d.id: {"status": d.status, "latency_days": d.observed_latency_days, "last_success_at": d.last_success_at} for d in session.scalars(select(DataSource)).all()},
+        "sources": {
+            d.id: {"status": d.status, "latency_days": d.observed_latency_days, "last_success_at": d.last_success_at}
+            for d in session.scalars(select(DataSource)).all()
+        },
     }

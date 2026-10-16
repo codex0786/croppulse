@@ -49,7 +49,9 @@ def build_context(session: Session, field: Field, as_of: datetime) -> FieldConte
         .order_by(Observation.period_start.desc())
     ).first()
     open_report = session.scalars(
-        select(ExpertCase.id).where(ExpertCase.field_id == field.id, ExpertCase.report_id.is_not(None), ExpertCase.status.not_in([CaseStatus.closed, CaseStatus.verified]))
+        select(ExpertCase.id).where(
+            ExpertCase.field_id == field.id, ExpertCase.report_id.is_not(None), ExpertCase.status.not_in([CaseStatus.closed, CaseStatus.verified])
+        )
     ).first()
     verified_state: RiskState | None = None
     vo = session.scalars(select(VerifiedOutcome).where(VerifiedOutcome.field_id == field.id).order_by(VerifiedOutcome.verified_at.desc())).first()
@@ -134,7 +136,9 @@ def escalate(session: Session, field: Field, ra: RiskAssessment) -> ExpertCase |
     else:
         case.assessment_id = ra.id
         case.updated_at = utcnow()
-    session.add(CaseEvent(case_id=case.id, actor_id=field.owner_id, kind="system_assessment", authored_by="system", data={"assessment_id": ra.id, "state": ra.state}))
+    session.add(
+        CaseEvent(case_id=case.id, actor_id=field.owner_id, kind="system_assessment", authored_by="system", data={"assessment_id": ra.id, "state": ra.state})
+    )
     return case
 
 
@@ -143,13 +147,19 @@ def open_report_case(session: Session, field: Field, report: FarmerReport) -> Ex
         select(ExpertCase).where(ExpertCase.field_id == field.id, ExpertCase.status.not_in([CaseStatus.closed, CaseStatus.verified]))
     ).first()
     if case is None:
-        case = ExpertCase(field_id=field.id, organization_id=field.organization_id, report_id=report.id, origin="farmer_request", status=CaseStatus.open, priority=2)
+        case = ExpertCase(
+            field_id=field.id, organization_id=field.organization_id, report_id=report.id, origin="farmer_request", status=CaseStatus.open, priority=2
+        )
         session.add(case)
         session.flush()
     else:
         case.report_id = report.id
         case.updated_at = utcnow()
-    session.add(CaseEvent(case_id=case.id, actor_id=report.reporter_id, kind="farmer_report", authored_by="human", data={"report_id": report.id, "symptoms": report.symptoms}))
+    session.add(
+        CaseEvent(
+            case_id=case.id, actor_id=report.reporter_id, kind="farmer_report", authored_by="human", data={"report_id": report.id, "symptoms": report.symptoms}
+        )
+    )
     return case
 
 

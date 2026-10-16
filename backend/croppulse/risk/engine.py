@@ -154,7 +154,14 @@ def assess(
     lc_ok = ctx.land_cover_class in cropland_classes if ctx.land_cover_class is not None else None
     if lc_ok is False:
         checks.append(Check("pixel_is_cropland", False, "degrading", "land_cover_not_cropland", {"class": ctx.land_cover_class, "year": ctx.land_cover_year}))
-        explanations.append({"key": "expl_land_cover_not_cropland", "kind": "observed", "params": {"class": ctx.land_cover_class, "year": ctx.land_cover_year}, "source": "modis_mcd12q1"})
+        explanations.append(
+            {
+                "key": "expl_land_cover_not_cropland",
+                "kind": "observed",
+                "params": {"class": ctx.land_cover_class, "year": ctx.land_cover_year},
+                "source": "modis_mcd12q1",
+            }
+        )
     elif lc_ok is None:
         checks.append(Check("pixel_is_cropland", False, "info", "land_cover_unknown"))
 
@@ -174,7 +181,15 @@ def assess(
         p, end, meta = latest_accepted
         age = (as_of_date - end).days
         veg_fresh = age <= vcfg["max_age_days_for_assessment"]
-        checks.append(Check("vegetation_fresh", veg_fresh, "degrading", "vegetation_fresh" if veg_fresh else "vegetation_stale", {"period_end": end.isoformat(), "age_days": age}))
+        checks.append(
+            Check(
+                "vegetation_fresh",
+                veg_fresh,
+                "degrading",
+                "vegetation_fresh" if veg_fresh else "vegetation_stale",
+                {"period_end": end.isoformat(), "age_days": age},
+            )
+        )
         # recent anomalies (last ~4 composites) for persistence
         recent = sorted([q for q in points if q.period_start <= p.period_start], key=lambda q: q.period_start, reverse=True)[:4]
         anoms = [
@@ -252,7 +267,14 @@ def assess(
                         },
                     }
                 )
-        explanations.append({"key": "expl_latest_composite", "kind": "observed", "source": "modis_mod13q1", "params": {"period_start": p.period_start.isoformat(), "period_end": end.isoformat(), "age_days": age}})
+        explanations.append(
+            {
+                "key": "expl_latest_composite",
+                "kind": "observed",
+                "source": "modis_mod13q1",
+                "params": {"period_start": p.period_start.isoformat(), "period_end": end.isoformat(), "age_days": age},
+            }
+        )
         veg = {
             "index": vcfg["index"],
             "source": "modis_mod13q1",
@@ -288,7 +310,15 @@ def assess(
         explanations.append({"key": "expl_weather_unavailable", "kind": "derived", "params": {}})
     else:
         wx_fresh = (feats.data_age_days or 0) <= wcfg["max_age_days_for_assessment"]
-        checks.append(Check("weather_fresh", wx_fresh, "degrading", "weather_fresh" if wx_fresh else "weather_stale", {"window_end": feats.window_end.isoformat(), "age_days": feats.data_age_days}))
+        checks.append(
+            Check(
+                "weather_fresh",
+                wx_fresh,
+                "degrading",
+                "weather_fresh" if wx_fresh else "weather_stale",
+                {"window_end": feats.window_end.isoformat(), "age_days": feats.data_age_days},
+            )
+        )
         r30 = feats.rain_window(30)
         if wx_fresh and r30 and r30.percentile is not None and not r30.climatologically_dry:
             indicators["rain_deficit"] = r30.percentile <= wcfg["deficit_percentile"]
@@ -307,15 +337,31 @@ def assess(
                 }
             )
         elif r30 and r30.climatologically_dry:
-            explanations.append({"key": "expl_rain_dry_season", "kind": "derived", "source": "nasa_power_daily", "params": {"window_end": feats.window_end.isoformat()}})
+            explanations.append(
+                {"key": "expl_rain_dry_season", "kind": "derived", "source": "nasa_power_daily", "params": {"window_end": feats.window_end.isoformat()}}
+            )
         if wx_fresh and feats.current_dry_spell_days is not None and r30 and not r30.climatologically_dry:
             indicators["dry_spell"] = feats.current_dry_spell_days >= wcfg["dry_spell_trigger_days"]
             if indicators["dry_spell"]:
-                explanations.append({"key": "expl_dry_spell", "kind": "derived", "source": "nasa_power_daily", "params": {"days": feats.current_dry_spell_days, "threshold_mm": wcfg["rainy_day_mm"], "lower_bound": feats.dry_spell_truncated}})
+                explanations.append(
+                    {
+                        "key": "expl_dry_spell",
+                        "kind": "derived",
+                        "source": "nasa_power_daily",
+                        "params": {"days": feats.current_dry_spell_days, "threshold_mm": wcfg["rainy_day_mm"], "lower_bound": feats.dry_spell_truncated},
+                    }
+                )
         if wx_fresh and feats.heat_days is not None:
             indicators["heat"] = feats.heat_days >= wcfg["heat_days_trigger"]
             if indicators["heat"]:
-                explanations.append({"key": "expl_heat_days", "kind": "derived", "source": "nasa_power_daily", "params": {"days": feats.heat_days, "threshold_c": wcfg["heat_tmax_c"], "window_days": wcfg["heat_window_days"]}})
+                explanations.append(
+                    {
+                        "key": "expl_heat_days",
+                        "kind": "derived",
+                        "source": "nasa_power_daily",
+                        "params": {"days": feats.heat_days, "threshold_c": wcfg["heat_tmax_c"], "window_days": wcfg["heat_window_days"]},
+                    }
+                )
         wx = {"source": "nasa_power_daily", "status": "current" if wx_fresh else "stale", **feats.to_dict()}
 
     # ---------------------------------------------------------------- soil moisture
@@ -328,9 +374,7 @@ def assess(
     checks.append(Check("independent_indicators", independent >= 2, "degrading", "independent_sources", {"count": independent}))
     checks.append(Check("model_validated", model_validated, "degrading", "model_validated" if model_validated else "model_not_validated"))
 
-    if not crop_known:
-        state = RiskState.insufficient_evidence
-    elif not veg_reliable and not wx_fresh:
+    if not crop_known or not veg_reliable and not wx_fresh:
         state = RiskState.insufficient_evidence
     elif not veg_reliable:
         # Missing or unreliable vegetation must never read as "healthy".

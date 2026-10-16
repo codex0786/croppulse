@@ -1,0 +1,22 @@
+# Public sample points for the data-feasibility study and descriptive backtest.
+#
+# These are NOT farmer fields. They were chosen in Marathwada (Maharashtra) and kept only
+# if MODIS MCD12Q1 (2024, LC_Type1) classifies the containing 500 m pixel as Croplands (12),
+# verified live on 2026-10-15. District attribution is deliberately omitted (not verified
+# against boundaries). Each point is represented by a 750 m × 750 m footprint.
+footprint_half_deg: 0.0035
+points:
+  - {id: S1, lat: 19.80, lon: 75.70}
+  - {id: S2, lat: 18.95, lon: 75.70}
+  - {id: S3, lat: 19.60, lon: 77.10}
+  - {id: S4, lat: 20.20, lon: 76.20}
+  - {id: S5, lat: 18.70, lon: 76.00}
+  - {id: S6, lat: 19.10, lon: 75.40}
+  - {id: S7, lat: 19.95, lon: 75.95}
+rejected_points:
+  - {lat: 18.40, lon: 76.55, reason: "MCD12Q1 2024 class 13 (Urban)"}
+  - {lat: 19.30, lon: 76.75, reason: "MCD12Q1 2024 class 13 (Urban)"}
+  - {lat: 19.88, lon: 75.34, reason: "MCD12Q1 2024 class 13 (Urban); used only for recorded parser fixtures"}
+modis_start_year: 2002
+backtest_years: [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+backtest_dates: ["08-15", "09-15", "10-15"]

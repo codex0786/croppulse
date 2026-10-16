@@ -19,8 +19,21 @@ from tests.fixtures.synthetic import square_polygon
 
 def make_field(session, owner, lat=19.95, lon=75.9):
     g = validate_field_geometry(square_polygon(lat, lon))
-    f = Field(owner_id=owner.id, organization_id=owner.organization_id, name="syn", district="Jalna", geometry_geojson=g.geojson, geometry_source="drawn",
-              centroid_lat=g.centroid_lat, centroid_lon=g.centroid_lon, min_lon=g.bbox[0], min_lat=g.bbox[1], max_lon=g.bbox[2], max_lat=g.bbox[3], area_ha=g.area_ha)
+    f = Field(
+        owner_id=owner.id,
+        organization_id=owner.organization_id,
+        name="syn",
+        district="Jalna",
+        geometry_geojson=g.geojson,
+        geometry_source="drawn",
+        centroid_lat=g.centroid_lat,
+        centroid_lon=g.centroid_lon,
+        min_lon=g.bbox[0],
+        min_lat=g.bbox[1],
+        max_lon=g.bbox[2],
+        max_lat=g.bbox[3],
+        area_ha=g.area_ha,
+    )
     session.add(f)
     session.flush()
     session.add(CropSeason(field_id=f.id, crop="soybean", season="kharif", season_year=utcnow().year, irrigation="rainfed"))
@@ -51,7 +64,11 @@ def test_provider_revision_creates_new_revision_not_overwrite(session, actors, w
     job = ingest_field_vegetation(session, f)
     assert job.checkpoint["revised"] > 0
     revised = session.scalars(select(Observation).where(Observation.revision == 2)).first()
-    old = session.scalars(select(Observation).where(Observation.field_id == f.id, Observation.period_start == revised.period_start, Observation.variable == revised.variable, Observation.revision == 1)).one()
+    old = session.scalars(
+        select(Observation).where(
+            Observation.field_id == f.id, Observation.period_start == revised.period_start, Observation.variable == revised.variable, Observation.revision == 1
+        )
+    ).one()
     assert old.is_current is False and revised.is_current is True
 
 

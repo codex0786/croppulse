@@ -90,14 +90,16 @@ def upsert_observation(session: Session, obs: Observation) -> str:
     return "revised"
 
 
-def ingest_field_vegetation(session: Session, field: Field, adapter: ModisOrnlAdapter | None = None, today: date | None = None) -> IngestionJob:
+def ingest_field_vegetation(
+    session: Session, field: Field, adapter: ModisOrnlAdapter | None = None, today: date | None = None, start_year: int | None = None
+) -> IngestionJob:
     cfg = science_config()["vegetation"]
     adapter = adapter or ModisOrnlAdapter()
     ds = _source_state(session, adapter.source_id)
     job = _start(session, adapter.source_id, "field_vegetation", field.id)
     try:
         today = today or datetime.now(UTC).date()
-        start = date(today.year - cfg["reference_years"] - 1, 1, 1)
+        start = date(start_year or today.year - cfg["reference_years"] - 1, 1, 1)
         series = adapter.field_series(
             field.geometry_geojson,
             (field.centroid_lat, field.centroid_lon),
@@ -107,6 +109,7 @@ def ingest_field_vegetation(session: Session, field: Field, adapter: ModisOrnlAd
             min_valid_fraction=cfg["min_valid_pixel_fraction"],
             window_km_min=cfg["fetch_window_km"],
             today=today,
+            include_evi=bool(cfg.get("fetch_evi", False)),
         )
         warnings = list(series.warnings) + check_vegetation_composites(series.composites)
         method = (
@@ -116,7 +119,7 @@ def ingest_field_vegetation(session: Session, field: Field, adapter: ModisOrnlAd
         counts = {"written": 0, "unchanged": 0, "revised": 0}
         now = utcnow()
         for c in series.composites:
-            for variable, value in (("NDVI", c.ndvi), ("EVI", c.evi)):
+            for variable, value in (("NDVI", c.ndvi), ("EVI", c.evi)) if cfg.get("fetch_evi") else (("NDVI", c.ndvi),):
                 obs = Observation(
                     field_id=field.id,
                     source_id=adapter.source_id,
@@ -226,9 +229,7 @@ def ingest_weather_cell(session: Session, cell: GridCell, adapter: NasaPowerAdap
         frame["date"] = pd.to_datetime(frame["date"])
         frame.to_parquet(tmp, index=False)
         digest = hashlib.sha256(tmp.read_bytes()).hexdigest()
-        current = session.scalars(
-            select(DatasetVersion).where(DatasetVersion.dataset_key == cell.key, DatasetVersion.is_current.is_(True))
-        ).first()
+        current = session.scalars(select(DatasetVersion).where(DatasetVersion.dataset_key == cell.key, DatasetVersion.is_current.is_(True))).first()
         if current is not None and current.sha256 == digest:
             tmp.unlink()
             job.records_unchanged = len(frame)
@@ -289,9 +290,9 @@ def load_weather_frame(session: Session, lat: float, lon: float) -> tuple[pd.Dat
     return frame.set_index("date"), dv
 
 
-def ingest_field(session: Session, field: Field) -> list[IngestionJob]:
+def ingest_field(session: Session, field: Field, start_year: int | None = None) -> list[IngestionJob]:
     """Run all field-level ingestion (vegetation, land cover, weather cell)."""
-    jobs = [ingest_field_vegetation(session, field), ingest_field_land_cover(session, field)]
+    jobs = [ingest_field_vegetation(session, field, start_year=start_year), ingest_field_land_cover(session, field)]
     cell = grid_cell_for(field.centroid_lat, field.centroid_lon)
     current = session.scalars(select(DatasetVersion).where(DatasetVersion.dataset_key == cell.key, DatasetVersion.is_current.is_(True))).first()
     # Neighbouring fields share a grid cell: refresh it at most every 12 hours.

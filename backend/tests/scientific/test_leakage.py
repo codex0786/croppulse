@@ -70,8 +70,15 @@ def test_weather_features_invariant_to_future_rows():
 
 def test_backtest_prediction_unchanged_by_later_data():
     years = range(2005, 2027)
-    s = [(SeriesPoint(date(y, m, d), 0.5 + 0.1 * np.sin(y), True, T0), date(y, m, d) + timedelta(days=15), {"valid_fraction": 1.0, "selection_rule": "pixel_center_in_polygon"})
-         for y in years for (m, d) in ((7, 28), (8, 13), (8, 29), (9, 14))]
+    s = [
+        (
+            SeriesPoint(date(y, m, d), 0.5 + 0.1 * np.sin(y), True, T0),
+            date(y, m, d) + timedelta(days=15),
+            {"valid_fraction": 1.0, "selection_rule": "pixel_center_in_polygon"},
+        )
+        for y in years
+        for (m, d) in ((7, 28), (8, 13), (8, 29), (9, 14))
+    ]
     w = _weather(date(2026, 10, 1))
     ctx = FieldContext("u", "soybean", "kharif", None, False, "polygon", 12, 2024)
     cfg = science_config()

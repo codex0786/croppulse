@@ -29,11 +29,7 @@ def library_version() -> str:
 
 
 def approved_ids_for_state(state: RiskState) -> list[str]:
-    return [
-        it["id"]
-        for it in _items()
-        if it["approval_status"] == ApprovalStatus.approved and state.value in it.get("applies_to_states", [])
-    ]
+    return [it["id"] for it in _items() if it["approval_status"] == ApprovalStatus.approved and state.value in it.get("applies_to_states", [])]
 
 
 def render(guidance_id: str, language: str) -> GuidanceText | None:
@@ -50,7 +46,9 @@ def render(guidance_id: str, language: str) -> GuidanceText | None:
     if t is None or t.get("status") != "approved":
         pending = language != "en"
         t = texts["en"]
-    return GuidanceText(guidance_id, language if not pending else "en", t["body"], pending, item.get("source_org"), item.get("source_ref"), item.get("limitations", ""))
+    return GuidanceText(
+        guidance_id, language if not pending else "en", t["body"], pending, item.get("source_org"), item.get("source_ref"), item.get("limitations", "")
+    )
 
 
 def render_unreviewed_translation(guidance_id: str, language: str) -> str | None:

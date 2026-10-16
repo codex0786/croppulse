@@ -95,10 +95,16 @@ class Actors:
         self.org = Organization(name="Synthetic FPO A", kind="fpo", state="Maharashtra", district="Jalna")
         self.org_b = Organization(name="Synthetic FPO B", kind="fpo", state="Maharashtra", district="Beed")
         session.add_all([self.org, self.org_b])
-        session.flush()
+        session.commit()
 
     def user(self, role: Role, email: str, org: Organization | None = None, consents: tuple[ConsentPurpose, ...] = ()) -> tuple[User, dict[str, str]]:
-        u = User(email=email, display_name=email.split("@")[0], password_hash=hash_password("correct-horse-battery", 1000), role=role, organization_id=org.id if org else None)
+        u = User(
+            email=email,
+            display_name=email.split("@")[0],
+            password_hash=hash_password("correct-horse-battery", 1000),
+            role=role,
+            organization_id=org.id if org else None,
+        )
         self.s.add(u)
         self.s.flush()
         record_consent(self.s, u.id, ConsentPurpose.core_service, True)

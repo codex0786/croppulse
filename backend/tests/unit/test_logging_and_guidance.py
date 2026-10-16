@@ -2,8 +2,8 @@ import io
 import json
 import logging
 
-from croppulse.guidance.library import approved_ids_for_state, render
 from croppulse.enums import RiskState
+from croppulse.guidance.library import approved_ids_for_state, render
 from croppulse.logging_setup import JsonFormatter, log, redact
 
 
@@ -20,7 +20,13 @@ def test_json_formatter_never_emits_coordinates_or_tokens():
     lg = logging.getLogger("t")
     lg.addHandler(h)
     lg.setLevel(logging.INFO)
-    log(lg, logging.INFO, "fetch https://x/api?latitude=19.88123&longitude=75.34123 token v1.0123456789abcdef0123456789abcdef.1999999999.sig_x", lat=19.88123, email="a@b.in")
+    log(
+        lg,
+        logging.INFO,
+        "fetch https://x/api?latitude=19.88123&longitude=75.34123 token v1.0123456789abcdef0123456789abcdef.1999999999.sig_x",
+        lat=19.88123,
+        email="a@b.in",
+    )
     line = buf.getvalue()
     json.loads(line)
     for secret in ("19.88123", "75.34123", "0123456789abcdef0123456789abcdef", "a@b.in"):

@@ -22,3 +22,5 @@ web/node_modules/
 web/.next/
 web/out/
 .DS_Store
+data/dev_credentials.txt
+data/*.txt

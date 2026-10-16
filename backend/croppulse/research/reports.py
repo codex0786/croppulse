@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import subprocess
+import subprocess  # noqa: S404
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,7 +25,8 @@ def assert_real_data(df: pd.DataFrame, what: str) -> None:
 
 def code_version(repo: Path) -> str:
     try:
-        return subprocess.run(["git", "-C", str(repo), "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True).stdout.strip() or "uncommitted"  # noqa: S603, S607
+        cmd = ["git", "-C", str(repo), "rev-parse", "--short", "HEAD"]  # fixed argv, no shell
+        return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip() or "uncommitted"  # noqa: S603
     except Exception:
         return "uncommitted"
 

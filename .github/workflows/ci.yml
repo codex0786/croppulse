@@ -1,0 +1,29 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env: { POSTGRES_PASSWORD: ci, POSTGRES_DB: croppulse }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e "backend[dev]"
+      - run: ruff check backend/croppulse backend/tests scripts
+      - run: mypy backend/croppulse
+      - run: cd backend && pytest
+      - name: migrations on PostgreSQL
+        env: { CROPPULSE_DATABASE_URL: "postgresql+psycopg://postgres:ci@localhost:5432/croppulse" }
+        run: cd backend && alembic upgrade head && alembic check
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: cd web && npm ci && npm test && npx tsc --noEmit && npx next lint && npm run build

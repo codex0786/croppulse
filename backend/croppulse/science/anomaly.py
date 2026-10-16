@@ -205,9 +205,7 @@ def low_persistence(
         if prev is not None and (prev - a.period_start).days > max_gap_days:
             gap_break = True
             break
-        is_low = (a.robust_z is not None and a.robust_z <= robust_z_threshold) and (
-            a.percentile is not None and a.percentile <= percentile_threshold
-        )
+        is_low = (a.robust_z is not None and a.robust_z <= robust_z_threshold) and (a.percentile is not None and a.percentile <= percentile_threshold)
         if not is_low:
             break
         count += 1

@@ -34,7 +34,7 @@ from croppulse.schemas import (
     WeatherDaily,
     WeatherOut,
 )
-from croppulse.science.anomaly import reference_sample, reference_stats
+from croppulse.science.anomaly import SeriesPoint, reference_sample, reference_stats
 from croppulse.sources.nasa_power import grid_cell_for
 
 router = APIRouter(prefix="/api/v1/fields", tags=["fields"])
@@ -225,7 +225,9 @@ def refresh(field_id: str, background: BackgroundTasks, user: User = Depends(cur
     if not get_settings().enable_live_sources:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Live sources are disabled in this deployment (CROPPULSE_ENABLE_LIVE_SOURCES=false)")
     running = session.scalars(
-        select(IngestionJob).where(IngestionJob.target_ref == field.id, IngestionJob.status == "running", IngestionJob.started_at > utcnow() - timedelta(minutes=15))
+        select(IngestionJob).where(
+            IngestionJob.target_ref == field.id, IngestionJob.status == "running", IngestionJob.started_at > utcnow() - timedelta(minutes=15)
+        )
     ).first()
     if running:
         return {"status": "already_running"}
@@ -237,9 +239,7 @@ def refresh(field_id: str, background: BackgroundTasks, user: User = Depends(cur
 def field_jobs(field_id: str, user: User = Depends(current_user), session: Session = Depends(db)) -> list[dict[str, Any]]:
     field = readable_field(field_id, session, user)
     cell = grid_cell_for(field.centroid_lat, field.centroid_lon).key
-    jobs = session.scalars(
-        select(IngestionJob).where(IngestionJob.target_ref.in_([field.id, cell])).order_by(IngestionJob.started_at.desc()).limit(10)
-    ).all()
+    jobs = session.scalars(select(IngestionJob).where(IngestionJob.target_ref.in_([field.id, cell])).order_by(IngestionJob.started_at.desc()).limit(10)).all()
     return [
         {
             "id": j.id,
@@ -275,7 +275,9 @@ def latest_assessment(field_id: str, user: User = Depends(current_user), session
 
 
 @router.get("/{field_id}/assessments", response_model=list[AssessmentOut])
-def assessment_history(field_id: str, user: User = Depends(current_user), session: Session = Depends(db), limit: int = Query(20, ge=1, le=100)) -> list[AssessmentOut]:
+def assessment_history(
+    field_id: str, user: User = Depends(current_user), session: Session = Depends(db), limit: int = Query(20, ge=1, le=100)
+) -> list[AssessmentOut]:
     readable_field(field_id, session, user)
     rows = session.scalars(select(RiskAssessment).where(RiskAssessment.field_id == field_id).order_by(RiskAssessment.assessed_at.desc()).limit(limit)).all()
     return [assessment_out(r, user.preferred_language) for r in rows]
@@ -296,13 +298,11 @@ def vegetation(
         .where(Observation.field_id == field_id, Observation.variable == variable, Observation.source_id == "modis_mod13q1", Observation.is_current.is_(True))
         .order_by(Observation.period_start)
     ).all()
-    from croppulse.science.anomaly import SeriesPoint
-
     pts = [SeriesPoint(o.period_start, o.value, o.accepted, o.available_at) for o in rows]
     now = datetime.now(UTC)
     since = date(now.year - years + 1, 1, 1)
     out: list[VegetationPoint] = []
-    for o, p in zip(rows, pts, strict=True):
+    for o in rows:
         if o.period_start < since:
             continue
         ref = reference_stats(reference_sample(pts, o.period_start, now, vcfg["reference_years"], vcfg["pool_adjacent_composites"]))
@@ -344,7 +344,9 @@ def weather(field_id: str, user: User = Depends(current_user), session: Session 
     field = readable_field(field_id, session, user)
     frame, dv = load_weather_frame(session, field.centroid_lat, field.centroid_lon)
     if frame is None or dv is None:
-        return WeatherOut(source_id="nasa_power_daily", data_kind="observed", grid_cell=None, units={}, retrieved_at=None, last_valid_date=None, daily=[], is_synthetic=False)
+        return WeatherOut(
+            source_id="nasa_power_daily", data_kind="observed", grid_cell=None, units={}, retrieved_at=None, last_valid_date=None, daily=[], is_synthetic=False
+        )
     end = frame.index.max()
     sub = frame[frame.index > end - timedelta(days=days)]
 

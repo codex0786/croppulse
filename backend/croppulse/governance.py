@@ -62,13 +62,11 @@ def can_read_field(session: Session, user: User, field: Field) -> bool:
         return True
     if user.role == Role.admin:
         return True
-    if user.role in (Role.agronomist, Role.fpo_manager) and user.organization_id and field.organization_id == user.organization_id:
-        if latest_consent(session, field.owner_id, ConsentPurpose.share_with_organization):
-            return True
+    same_org = user.organization_id is not None and field.organization_id == user.organization_id
+    if user.role in (Role.agronomist, Role.fpo_manager) and same_org and latest_consent(session, field.owner_id, ConsentPurpose.share_with_organization):
+        return True
     if user.role == Role.agronomist and user.organization_id:
-        has_case = session.scalars(
-            select(ExpertCase.id).where(ExpertCase.field_id == field.id, ExpertCase.organization_id == user.organization_id)
-        ).first()
+        has_case = session.scalars(select(ExpertCase.id).where(ExpertCase.field_id == field.id, ExpertCase.organization_id == user.organization_id)).first()
         if has_case and latest_consent(session, field.owner_id, ConsentPurpose.expert_review):
             return True
     return False

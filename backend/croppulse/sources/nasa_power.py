@@ -50,7 +50,7 @@ def grid_cell_for(lat: float, lon: float) -> GridCell:
 @dataclass
 class PowerSeries:
     cell: GridCell
-    frame: pd.DataFrame          # index: date; columns: PARAMETERS; NaN where the source has fill
+    frame: pd.DataFrame  # index: date; columns: PARAMETERS; NaN where the source has fill
     units: dict[str, str]
     sources: list[str]
     api_version: str

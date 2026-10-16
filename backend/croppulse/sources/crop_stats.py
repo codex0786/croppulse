@@ -18,8 +18,8 @@ import pandas as pd
 REQUIRED_COLUMNS = [
     "state",
     "district",
-    "agri_year",       # e.g. "2019-20"
-    "season",          # kharif | rabi | summer | whole_year | ... (as published)
+    "agri_year",  # e.g. "2019-20"
+    "season",  # kharif | rabi | summer | whole_year | ... (as published)
     "crop",
     "area",
     "area_unit",

@@ -80,7 +80,9 @@ def test_png_text_is_stripped():
     assert b"GPS" not in clean and b"IDAT" in clean
 
 
-@pytest.mark.parametrize("data,msg", [(b"", "Empty"), (b"GIF89a....", "Only JPEG"), (b"<?php echo 1; ?>", "Only JPEG"), (b"\xff\xd8\xff" + b"0" * 5000, "exceeds")])
+@pytest.mark.parametrize(
+    "data,msg", [(b"", "Empty"), (b"GIF89a....", "Only JPEG"), (b"<?php echo 1; ?>", "Only JPEG"), (b"\xff\xd8\xff" + b"0" * 5000, "exceeds")]
+)
 def test_bad_uploads_rejected(tmp_path, data, msg):
     with pytest.raises(UploadError, match=msg):
         store_photo(data, tmp_path, 1024)

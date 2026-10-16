@@ -15,7 +15,16 @@ T_AVAIL = datetime(2000, 1, 1, tzinfo=UTC)
 
 
 def ctx(**kw):
-    base = dict(field_id="f", crop="soybean", season="kharif", sowing_date=date(2026, 6, 25), sowing_date_uncertain=False, geometry_kind="polygon", land_cover_class=12, land_cover_year=2024)
+    base = dict(
+        field_id="f",
+        crop="soybean",
+        season="kharif",
+        sowing_date=date(2026, 6, 25),
+        sowing_date_uncertain=False,
+        geometry_kind="polygon",
+        land_cover_class=12,
+        land_cover_year=2024,
+    )
     base.update(kw)
     return FieldContext(**base)
 
@@ -25,9 +34,21 @@ def veg(target_values: dict[date, float | None], ref_value: float = 0.6, years=r
     for d in sorted(target_values):
         for i, y in enumerate(years):
             v = ref_value + spread * ((i % 5) - 2) / 2
-            out.append((SeriesPoint(d.replace(year=y), v, True, T_AVAIL), d.replace(year=y) + timedelta(days=15), {"valid_fraction": 1.0, "selection_rule": "pixel_center_in_polygon"}))
+            out.append(
+                (
+                    SeriesPoint(d.replace(year=y), v, True, T_AVAIL),
+                    d.replace(year=y) + timedelta(days=15),
+                    {"valid_fraction": 1.0, "selection_rule": "pixel_center_in_polygon"},
+                )
+            )
         v = target_values[d]
-        out.append((SeriesPoint(d, v, v is not None, T_AVAIL), d + timedelta(days=15), {"valid_fraction": 1.0 if v is not None else 0.0, "selection_rule": "pixel_center_in_polygon"}))
+        out.append(
+            (
+                SeriesPoint(d, v, v is not None, T_AVAIL),
+                d + timedelta(days=15),
+                {"valid_fraction": 1.0 if v is not None else 0.0, "selection_rule": "pixel_center_in_polygon"},
+            )
+        )
     return out
 
 

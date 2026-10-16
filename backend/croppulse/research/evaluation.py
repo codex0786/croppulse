@@ -190,7 +190,9 @@ def block_bootstrap_ci(
     return float(np.quantile(vals, alpha / 2)), float(np.quantile(vals, 1 - alpha / 2))
 
 
-def metrics_from_table(pred: pd.DataFrame, *, label_col: str = "label", flag_col: str = "flag", score_col: str | None = "score", block_col: str | None = None) -> dict[str, Any]:
+def metrics_from_table(
+    pred: pd.DataFrame, *, label_col: str = "label", flag_col: str = "flag", score_col: str | None = "score", block_col: str | None = None
+) -> dict[str, Any]:
     """Recompute all reportable metrics from a stored predictions table (reproducibility)."""
     m: dict[str, Any] = {"n": int(len(pred)), "positives": int(pred[label_col].sum())}
     m.update(precision_recall(pred[label_col], pred[flag_col]))

@@ -62,7 +62,7 @@ class HttpFetcher:
     def __init__(self, source_id: str, transport: Transport | None = None, cache_dir: Path | None = None) -> None:
         s = get_settings()
         self.source_id = source_id
-        self.client: Transport = transport or default_transport or httpx.Client(timeout=s.http_timeout_seconds, follow_redirects=True)
+        self.client: Transport = transport or default_transport or httpx.Client(timeout=s.http_timeout_seconds, follow_redirects=True)  # type: ignore[assignment]
         self.max_retries = s.http_max_retries
         self.cache_dir = cache_dir or (s.data_dir / "raw" / source_id)
 

@@ -23,6 +23,7 @@ vegetation:
   persistence_composites: 2   # consecutive low composites before "persistent"
   max_age_days_for_assessment: 48   # composite END date to assessment time
   fetch_window_km: 1          # kmAboveBelow / kmLeftRight for field subsets
+  fetch_evi: false            # EVI is supported but doubles ORNL request volume (~35 s/request observed); enable when needed
 
 weather:
   product: NASA_POWER_DAILY

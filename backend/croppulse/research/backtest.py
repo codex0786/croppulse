@@ -25,9 +25,7 @@ from croppulse.risk.engine import FieldContext, assess
 from croppulse.science.anomaly import SeriesPoint
 
 
-def simulate_availability(
-    series: list[tuple[SeriesPoint, date, dict[str, Any]]], latency_days: int
-) -> list[tuple[SeriesPoint, date, dict[str, Any]]]:
+def simulate_availability(series: list[tuple[SeriesPoint, date, dict[str, Any]]], latency_days: int) -> list[tuple[SeriesPoint, date, dict[str, Any]]]:
     return [(replace(p, available_at=datetime.combine(end + timedelta(days=latency_days), time(0), tzinfo=UTC)), end, meta) for p, end, meta in series]
 
 
