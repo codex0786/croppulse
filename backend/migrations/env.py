@@ -12,15 +12,25 @@ target_metadata = Base.metadata
 
 
 def include_object(obj: object, name: str, type_: str, reflected: bool, compare_to: object | None) -> bool:
-    """Ignore database-owned tables, such as PostGIS system tables.
+    """Ignore database-owned tables and their objects during autogeneration.
 
-    Autogenerate should compare only tables declared by CropPulse models. A
-    PostGIS-enabled database contains extension-owned relations in public;
-    treating those as application drift produces false removals in alembic
-    check even though CropPulse does not own those relations.
+    PostGIS installs extension-owned relations into public. They are not
+    CropPulse models and must not be reported as application schema drift.
     """
-    if type_ == "table" and reflected and compare_to is None:
+    if not reflected or compare_to is not None:
+        return True
+
+    if type_ == "table":
         return False
+
+    # Reflected indexes/constraints/columns belong to their parent table.
+    # Skip them when that table is not part of CropPulse's model metadata.
+    parent_table = getattr(obj, "table", None)
+    if parent_table is not None:
+        key = f"{parent_table.schema}.{parent_table.name}" if parent_table.schema else parent_table.name
+        if key not in target_metadata.tables and parent_table.name not in target_metadata.tables:
+            return False
+
     return True
 
 
