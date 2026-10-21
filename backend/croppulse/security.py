@@ -8,6 +8,7 @@ stateless bearer tokens: ``v1.<user_id>.<expiry_epoch>.<signature>``. Changing
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import hmac
 import secrets
@@ -31,14 +32,27 @@ def hash_password(password: str, iterations: int | None = None) -> str:
 
 
 def verify_password(password: str, encoded: str) -> bool:
+    """Verify a stored password hash without trusting its serialized fields.
+
+    Malformed or corrupted database values must fail closed, not raise during
+    login. Bound the iteration count so a damaged hash cannot trigger an
+    unbounded PBKDF2 computation.
+    """
     try:
         algo, it, salt_b64, dk_b64 = encoded.split("$")
-    except ValueError:
+        if algo != _ALGO:
+            return False
+        iterations = int(it)
+        if not 1 <= iterations <= 2_000_000:
+            return False
+        salt = base64.b64decode(salt_b64, validate=True)
+        expected = base64.b64decode(dk_b64, validate=True)
+        if len(salt) != 16 or len(expected) != hashlib.sha256().digest_size:
+            return False
+        actual = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, iterations)
+    except (AttributeError, TypeError, ValueError, binascii.Error, OverflowError):
         return False
-    if algo != _ALGO:
-        return False
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), base64.b64decode(salt_b64), int(it))
-    return hmac.compare_digest(dk, base64.b64decode(dk_b64))
+    return hmac.compare_digest(actual, expected)
 
 
 def _sign(payload: str) -> str:
