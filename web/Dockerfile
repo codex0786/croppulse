@@ -12,6 +12,7 @@ WORKDIR /web
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 COPY --from=build /web/.next ./.next
 COPY --from=build /web/public ./public
+COPY --from=build /web/next.config.js ./next.config.js
 COPY --from=build /web/package.json /web/package-lock.json ./
 RUN npm ci --omit=dev && adduser -D -u 10001 web
 USER web
